@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0d0c">
+<title>Dope Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0b0d0c;--panel:#141816;--panel2:#1c211e;--line:#29302b;--text:#eef1ec;--dim:#8a948d;--amber:#f2a93b;--hit:#45d07a;--miss:#ff5a43;--blue:#59b4ff;
+    --cond:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 var(--body)}
+  body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    background-image:radial-gradient(circle at 20% -10%,rgba(242,169,59,.10),transparent 45%),radial-gradient(circle at 110% 30%,rgba(89,180,255,.06),transparent 40%)}
+  main{max-width:520px;margin:0 auto;padding:14px 14px 110px}
+  .hidden{display:none!important}
+  .cond{font-family:var(--cond)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+  .label{font-family:var(--cond);font-size:14px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.14em}
+  .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .read{font-family:var(--cond);font-size:26px;font-weight:700}
+  .read small{font-size:15px;color:var(--dim);font-weight:500;margin-left:3px}
+  .note{font-size:13px;color:var(--dim)}
+  .row{display:flex;gap:10px;align-items:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{font:inherit;border:0;border-radius:14px;padding:14px;width:100%;font-weight:700;cursor:pointer;color:#111;background:var(--amber);transition:transform .08s}
+  button:active{transform:scale(.97)}
+  button.sec{background:var(--panel2);color:var(--text);font-weight:600;font-size:15px;padding:12px;border:1px solid var(--line)}
+  button.ghost{background:none;color:var(--dim);width:auto;padding:8px 10px;font-weight:600}
+  input,select,textarea{font:inherit;width:100%;background:#0e1110;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}
+  label.f{display:block;font-size:13px;color:var(--dim);margin:10px 0 4px}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+  td,th{padding:4px;text-align:left;border-bottom:1px solid var(--line)} th{color:var(--dim);font-weight:500;font-size:12px}
+  td input{padding:6px}
+  .ok{color:var(--hit)} .bad{color:var(--miss)}
+  details summary{cursor:pointer;list-style:none} details summary::-webkit-details-marker{display:none}
+
+  /* brand */
+  .brand{display:flex;align-items:center;gap:12px;margin:8px 2px 16px}
+  .brand h1{font-family:var(--cond);font-size:34px;font-weight:800;letter-spacing:.04em;margin:0;line-height:.95;text-transform:uppercase}
+  .brand h1 span{color:var(--amber)}
+  .brand p{margin:2px 0 0;color:var(--dim);font-size:13px}
+  .brand svg{flex:none;animation:spin 18s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* chips */
+  .chips{display:flex;gap:7px}
+  .chip{flex:1;padding:12px 0;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-family:var(--cond);font-size:24px;font-weight:700;color:var(--dim)}
+  .chip.on{background:var(--amber);border-color:var(--amber);color:#111;box-shadow:0 6px 18px -6px rgba(242,169,59,.6)}
+  .pchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+  .pchip{width:auto;flex:1 1 auto;padding:8px 10px;border-radius:999px;background:none;border:1px solid var(--line);color:var(--dim);font-size:13px;font-weight:600}
+  .pchip.on{border-color:var(--amber);color:var(--amber)}
+  .plates{display:flex;align-items:flex-end;justify-content:center;gap:10px;height:54px;margin-top:12px}
+  .plate{display:flex;flex-direction:column;align-items:center;animation:pop .25s ease-out both}
+  .plate i{display:block;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3,transparent 60%),#cfd5d0;box-shadow:0 2px 0 #0006}
+  .plate b{display:block;width:2px;height:14px;background:#5d655f}
+  .plate.mv i{background:radial-gradient(circle at 35% 30%,#fff5,transparent 60%),var(--amber)}
+  .plate.mv b{width:auto;height:14px;background:none;color:var(--amber);font-size:11px;line-height:14px;font-weight:700}
+  @keyframes pop{from{transform:scale(.3) translateY(10px);opacity:0}}
+
+  /* dual slider */
+  .dual{position:relative;height:40px;margin-top:4px}
+  .dual .track,.dual .fill{position:absolute;top:17px;height:6px;border-radius:3px}
+  .dual .track{left:0;right:0;background:var(--line)} .dual .fill{background:var(--amber)}
+  .dual input{position:absolute;left:0;top:7px;width:100%;height:26px;margin:0;padding:0;border:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+  .dual input::-webkit-slider-runnable-track{height:26px;background:transparent}
+  .dual input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:28px;height:28px;border-radius:50%;background:var(--amber);border:4px solid #111;margin-top:-1px;box-shadow:0 2px 8px #0008}
+  .dual input::-moz-range-thumb{pointer-events:auto;width:22px;height:22px;border-radius:50%;background:var(--amber);border:4px solid #111}
+  .dual input::-moz-range-track{background:transparent}
+
+  /* dope */
+  .dopehead{display:flex;gap:12px;align-items:center}
+  .dopestat{flex:1}
+  .dopestat .big{font-family:var(--cond);font-size:22px;font-weight:700}
+  .warn{color:var(--miss);font-weight:600}
+  .tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+  .tabs button{font-size:14px;padding:12px 6px}
+  .tabs button.on{border-color:var(--amber);color:var(--amber)}
+
+  /* start bar */
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .modes button{border-radius:0;background:var(--panel);color:var(--dim);font-family:var(--cond);font-size:20px;letter-spacing:.04em;padding:12px}
+  .modes button.on{background:var(--amber);color:#111}
+  .micmeter{height:14px;background:var(--panel2);border-radius:8px;position:relative;overflow:hidden;margin-top:10px}
+  .micmeter i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);width:0}
+  .micmeter b{position:absolute;top:0;bottom:0;width:3px;background:var(--miss)}
+  .boom{font-family:var(--cond);font-size:22px;font-weight:800;color:var(--hit);text-align:center;height:28px;margin-top:6px}
+  ol.steps{margin:6px 0 0;padding-left:20px;font-size:14px;color:var(--text)} ol.steps li{margin:4px 0}
+  .modal{position:fixed;inset:0;z-index:50;background:rgba(5,6,6,.82);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+  .modal .sheet{background:var(--panel);border:1px solid var(--line);border-radius:20px;max-width:500px;width:100%;max-height:92vh;overflow:auto;padding:18px}
+  .modal h2{font-family:var(--cond);font-size:28px;margin:0 0 4px;letter-spacing:.03em;text-transform:uppercase;color:var(--amber)}
+  .chk{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;cursor:pointer;font-size:14px;line-height:1.4}
+  .chk input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--amber)}
+  .chk.on{border-color:var(--amber);background:rgba(242,169,59,.06)}
+  .startbar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 35%)}
+  .startbar button{max-width:492px;margin:0 auto;display:block;font-family:var(--cond);font-size:24px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:16px;border-radius:16px;box-shadow:0 10px 30px -10px rgba(242,169,59,.7)}
+  .startbar small{display:block;font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;opacity:.75}
+
+  /* session */
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin:2px 0 10px}
+  .pill{font-size:12px;padding:4px 10px;border-radius:20px;background:var(--panel2);color:var(--dim);font-weight:600}
+  .big{font-family:var(--cond);font-size:64px;font-weight:800;line-height:.9;font-variant-numeric:tabular-nums}
+  .unit{font-size:20px;color:var(--dim);font-weight:600;margin-left:4px}
+  .wind{font-family:var(--cond);font-size:30px;font-weight:700}
+  #status{font-family:var(--cond);font-size:36px;font-weight:800;text-align:center;padding:14px 6px;border-radius:14px;background:#10243a;color:var(--blue);min-height:92px;display:flex;align-items:center;justify-content:center;flex-direction:column;letter-spacing:.02em}
+  #status small{font-family:var(--body);font-size:14px;font-weight:500;color:var(--dim);margin-top:2px;letter-spacing:0}
+  #status.hit{background:#123222;color:var(--hit);animation:flash .5s}
+  #status.miss{background:#3a1813;color:var(--miss);animation:shake .35s}
+  #status.enter{background:#33280f;color:var(--amber)}
+  @keyframes flash{0%{box-shadow:0 0 0 0 rgba(69,208,122,.7)}100%{box-shadow:0 0 0 18px rgba(69,208,122,0)}}
+  @keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+  .timer{display:flex;align-items:center;gap:12px;margin-top:12px}
+  .timer .t{font-family:var(--cond);font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;min-width:96px;line-height:1}
+  .timer .tb{flex:1;height:10px;border-radius:6px;background:var(--panel2);overflow:hidden}
+  .timer .tb i{display:block;height:100%;width:100%;background:var(--hit);transition:width .1s linear}
+  .timer.warn .t{color:var(--amber)} .timer.warn .tb i{background:var(--amber)}
+  .timer.crit .t{color:var(--miss);animation:blink 1s steps(2) infinite} .timer.crit .tb i{background:var(--miss)}
+  .timer.paused .t{opacity:.45}
+  .timer .ps{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;min-width:44px;text-align:right}
+  @keyframes blink{50%{opacity:.45}}
+  .meter{height:6px;background:var(--panel2);border-radius:6px;position:relative;overflow:hidden;margin-top:10px}
+  .meter i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);width:0}
+  .meter b{position:absolute;top:0;bottom:0;width:2px;background:var(--miss)}
+  .hold input{font-family:var(--cond);font-size:34px;font-weight:700;text-align:center;padding:8px}
+  .seg{display:flex;margin-top:6px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .seg button{border-radius:0;padding:10px;font-size:16px;background:#0e1110;color:var(--dim)}
+  .seg button.on{background:var(--amber);color:#111}
+  .brow{display:grid;grid-template-columns:58px 1fr 1fr 50px 40px;gap:6px;align-items:center;margin-top:8px}
+  .brow .nsb{padding:10px 0;font-size:13px;color:var(--dim)}
+  .brow.off input,.brow.off .lr{opacity:.25;pointer-events:none} .brow.off .nsb{color:var(--miss);border-color:var(--miss)}
+  .brow .bt{font-family:var(--cond);line-height:1.05}
+  .brow .bt b{display:block;font-size:20px} .brow .bt span{font-size:11px;color:var(--dim)}
+  .brow input{font-family:var(--cond);font-size:24px;font-weight:700;text-align:center;padding:8px 4px}
+  .brow .lr{padding:10px 0;font-size:16px}
+  .brow.ns{opacity:.5}
+  .bres{display:block!important;padding:6px 0;border-bottom:1px solid var(--line)}
+  .bres .top{display:flex;justify-content:space-between;font-weight:600}
+  .grade .bres .note{display:block;border:0;padding:3px 0 0;font-size:13px;line-height:1.45}
+  .grade .bres .top{border:0;padding:0;gap:10px} .grade .bres .top span:last-child{text-align:right}
+  .plotwrap{display:flex;gap:12px;align-items:flex-start}
+  .plotwrap .ptxt{flex:1;font-size:13px;line-height:1.45}
+  .plotwrap .ptxt b{font-family:var(--cond);font-size:17px}
+  .tip{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:13px}
+  .tlist{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+  .tchip{background:#0e1110;border:1px solid var(--line);border-radius:12px;padding:6px 8px;font-variant-numeric:tabular-nums}
+  .tchip .n{font-size:11px;color:var(--dim)} .tchip .d{font-family:var(--cond);font-size:22px;font-weight:700;line-height:1.1}
+  .tchip{cursor:pointer}
+  .tchip.cur{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
+  .tchip.h{border-color:var(--hit)} .tchip.h .d{color:var(--hit)}
+  .tchip.m{border-color:var(--miss)} .tchip.m .d{color:var(--miss)}
+  .grade{font-variant-numeric:tabular-nums;font-size:15px;margin-top:10px}
+  .grade div{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .stat{background:var(--panel2);border-radius:12px;padding:8px;text-align:center}
+  .stat b{display:block;font-family:var(--cond);font-size:26px;line-height:1}
+  .stat span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<main>
+
+<!-- ================= HOME ================= -->
+<section id="home">
+  <div class="brand">
+    <svg width="54" height="54" viewBox="-30 -30 60 60" aria-hidden="true">
+      <circle r="26" fill="none" stroke="#f2a93b" stroke-width="2.5"/>
+      <circle r="3" fill="#f2a93b"/>
+      <g stroke="#eef1ec" stroke-width="1.5"><line x1="-30" y1="0" x2="-8" y2="0"/><line x1="8" y1="0" x2="30" y2="0"/><line x1="0" y1="-30" x2="0" y2="-8"/><line x1="0" y1="8" x2="0" y2="30"/></g>
+      <g stroke="#8a948d" stroke-width="1"><line x1="-16" y1="-3" x2="-16" y2="3"/><line x1="16" y1="-3" x2="16" y2="3"/><line x1="-3" y1="16" x2="3" y2="16"/><line x1="-3" y1="-16" x2="3" y2="-16"/></g>
+    </svg>
+    <div>
+      <h1>Dope <span>Trainer</span></h1>
+      <p>Get the call. Do the math. Send it.</p>
+    </div>
+  </div>
+
+  <!-- mode -->
+  <div class="card" id="matchCard">
+    <div class="h"><span class="label">Match stages</span><span class="read" id="msRead"></span></div>
+    <div class="chips" id="msChips"></div>
+    <p class="note" style="margin:10px 0 0">Match rules: <b>one shot per engagement, 1 point per hit</b>, timed stages. Each stage is built from the settings below. You get a scorecard at the end. Pick 1 stage for a quick drill.</p>
+  </div>
+
+  <!-- targets -->
+  <div class="card">
+    <div class="h"><span class="label">Targets</span><span class="read" id="tRead">1 <small>target</small></span></div>
+    <div class="chips" id="tChips"></div>
+    <div class="plates" id="plates"></div>
+    <div class="h" style="margin:16px 0 10px"><span class="label">Positions</span><span class="read" id="posRead"></span></div>
+    <div class="chips" id="posChips"></div>
+    <div id="orderBox">
+      <div class="h" style="margin:16px 0 10px"><span class="label">Order</span></div>
+      <div class="chips" id="ordChips"></div>
+    </div>
+    <div class="h" style="margin:16px 0 10px"><span class="label">Movers</span><span class="read" id="mRead"></span></div>
+    <div class="chips" id="mChips"></div>
+    <div id="mvBox">
+      <div class="h" style="margin:14px 0 0"><span class="note">Mover speed</span><span class="read" id="mvRead" style="font-size:20px"></span></div>
+      <div class="dual" id="mvDual"><div class="track"></div><div class="fill"></div>
+        <input type="range" id="mvLo" min="1" max="10" step="0.5"><input type="range" id="mvHi" min="1" max="10" step="0.5"></div>
+    </div>
+  </div>
+
+  <!-- target size -->
+  <div class="card">
+    <div class="h"><span class="label">Target size</span><span class="read" id="szRead"></span></div>
+    <div class="chips" id="szChips"></div>
+    <p class="note" style="margin:10px 0 0">Each target gets a real plate size (4–30″) based on its distance. A shot counts as a hit if it lands anywhere on the plate. Your read doesn't have to match the dope exactly, so you'll see where on the plate each shot landed.</p>
+  </div>
+
+  <!-- distance -->
+  <div class="card">
+    <div class="h"><span class="label">Distance</span><span class="read" id="dRead"></span></div>
+    <div class="dual" id="dDual"><div class="track"></div><div class="fill"></div>
+      <input type="range" id="dLo" min="100" max="1200" step="25"><input type="range" id="dHi" min="100" max="1200" step="25"></div>
+    <div class="pchips" id="dPresets"></div>
+  </div>
+
+  <!-- wind -->
+  <div class="card">
+    <div class="h"><span class="label">Wind</span><span class="read" id="wRead"></span></div>
+    <div class="dual" id="wDual"><div class="track"></div><div class="fill"></div>
+      <input type="range" id="wLo" min="0" max="25" step="1"><input type="range" id="wHi" min="0" max="25" step="1"></div>
+    <div class="pchips" id="wPresets"></div>
+  </div>
+
+  <!-- timer -->
+  <div class="card">
+    <div class="h"><span class="label">Stage timer</span><span class="read" id="pRead"></span></div>
+    <div class="chips" id="pChips"></div>
+    <p class="note" style="margin:10px 0 0">Starts on the beep and stops when you tap Stage complete. Entering data is never on the clock.</p>
+  </div>
+
+  <!-- dope -->
+  <div class="card" id="dopeCard">
+    <div class="h" style="margin-bottom:8px"><span class="label">Your dope</span><span class="note">mils</span></div>
+    <div class="dopehead">
+      <svg id="spark" width="120" height="58" viewBox="0 0 120 58"></svg>
+      <div class="dopestat"><div class="big" id="dopeBig"></div><div class="note" id="dopeSmall"></div></div>
+    </div>
+    <div class="tabs">
+      <button class="sec" data-tab="shot">📷 Screenshot</button>
+      <button class="sec" data-tab="table">✏️ Edit</button>
+    </div>
+
+    <div id="tab-shot" class="hidden" style="margin-top:12px">
+      <p class="note" style="margin-top:0">Screenshot your ballistic app's dope table. Pick more than one if it scrolls. It reads the numbers, and you check them before they're saved. Needs internet the first time.</p>
+      <input id="ocrFile" type="file" accept="image/*" multiple>
+    </div>
+    <div id="tab-table" class="hidden" style="margin-top:12px">
+      <table id="dope"><thead><tr><th>Dist</th><th>Elev</th><th>Wind/10mph</th><th>TOF s</th><th></th></tr></thead><tbody></tbody></table>
+      <div class="grid" style="margin-top:8px"><button class="sec" id="addRow">+ Row</button><button class="sec" id="resetDope">Load example</button></div>
+    </div>
+
+    <div id="ocrStatus" class="note" style="margin-top:8px"></div>
+    <div id="ocrReview" class="hidden" style="margin-top:8px">
+      <p class="note">Tell it what each column is. Fix any misread numbers (watch for dropped decimals, like 48 instead of 4.8) and delete junk rows.</p>
+      <div class="row"><span class="note">Wind column is for</span><input id="ocrWindMph" type="number" inputmode="decimal" value="10" style="width:76px"><span class="note">mph</span></div>
+      <div style="overflow-x:auto;margin-top:8px"><table id="ocrTable"></table></div>
+      <div class="grid" style="margin-top:8px"><button id="ocrApply">Save dope</button><button class="sec" id="ocrCancel">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- tendencies -->
+  <div class="card" id="tendCard">
+    <div class="h"><span class="label">📍 Your impact history</span><span class="note" id="tendN"></span></div>
+    <div id="tendPlot"></div>
+    <button class="sec hidden" id="tendReset" style="margin-top:10px">Reset history</button>
+  </div>
+
+  <!-- mic -->
+  <div class="card" id="micCard">
+    <div class="h"><span class="label">🎙 Shot detection</span><span class="pill" id="micHome">not tested</span></div>
+    <div class="note" id="micWhere"></div>
+    <button class="sec" id="micTest" style="margin-top:10px">Test mic</button>
+    <div class="micmeter"><i id="hLvl"></i><b id="hThr"></b></div>
+    <div class="boom" id="boom"></div>
+    <label class="f" style="margin-top:0">Trigger level: <b id="thrVal"></b> <span class="note">(red line)</span></label>
+    <input id="micThr" type="range" min="0.05" max="1" step="0.01" style="padding:0">
+    <details style="margin-top:12px">
+      <summary class="label">How the mic works ▾</summary>
+      <ol class="steps">
+        <li><b>It only works from a web link (https).</b> Put this file on Netlify Drop or GitHub Pages and open the link in Safari or Chrome. It won't work opened from the Files app or inside Claude.</li>
+        <li>Tap <b>Test mic</b> and allow microphone access. The blue bar shows how loud it is.</li>
+        <li>Clap or dry fire next to the phone, then drag the <b>red line</b> above the background noise and below your shot. Watch for "💥 Shot detected."</li>
+        <li>At the range, set the phone <b>beside you or behind the rifle</b>, within about 3 ft. Keep it out of the brake blast. A suppressed rifle is quieter, so lower the line.</li>
+        <li>On a busy firing line, raise the line to <b>0.6–0.8</b> so only your own shot counts.</li>
+        <li>The mic is <b>optional</b>. During a live stage it just counts your shots on screen. You never have to tap anything mid-stage. Shoot it all, then tap <b>Stage complete</b>.</li>
+        <li>Saying "ready" to start the stage uses the same mic. If it doesn't respond, tap <b>Shooter ready</b>.</li>
+      </ol>
+    </details>
+  </div>
+
+  <!-- advanced -->
+  <div class="card">
+    <details>
+      <summary class="label">⚙ More settings</summary>
+      <div class="grid">
+        <div><label class="f">Units</label><select id="units"><option value="yd">Yards</option><option value="m">Meters</option></select></div>
+        <div><label class="f">Round distance to</label><select id="roundTo"><option value="1">1</option><option value="5">5</option><option value="25">25</option><option value="50">50</option></select></div>
+        <div><label class="f">Grade hits by</label><select id="gradeBy"><option value="size">Plate size (realistic)</option><option value="tol">Fixed tolerance</option></select></div>
+        <div></div>
+        <div><label class="f">Elev tolerance ± mil (tolerance mode)</label><input id="tolE" type="number" step="0.05" inputmode="decimal"></div>
+        <div><label class="f">Wind tolerance ± mil (tolerance mode)</label><input id="tolW" type="number" step="0.05" inputmode="decimal"></div>
+        <div><label class="f">Stage brief</label><select id="brief"><option value="all">Read all targets</option><option value="oncall">One at a time</option></select></div>
+        <div><label class="f">Stage call speed</label><select id="callRate"><option value="0.65">Very slow</option><option value="0.8">Slow</option><option value="0.9">Medium</option><option value="1.05">Normal</option></select></div>
+        <div><label class="f">Min gap between targets</label><input id="gapMin" type="number" inputmode="numeric"></div>
+        <div><label class="f">Max gap between targets</label><input id="gapMax" type="number" inputmode="numeric"></div>
+        <div><label class="f">Auto voice calls</label><select id="autoVoice"><option value="false">Off (▶ Play only)</option><option value="true">On (hands-free)</option></select></div>
+      </div>
+      <p class="note">Voice is silent unless you tap ▶ Play. Turn Auto voice calls on to hear every call, hit and miss. Clock values: 3/9 = 1.0, 2/4/8/10 = 0.87, 1/5/7/11 = 0.5, 12/6 = 0.</p>
+    </details>
+  </div>
+
+  <button class="ghost" id="safetyLink" style="width:100%;margin-bottom:8px">⚠ Safety rules</button>
+
+  <div class="startbar"><button id="startBtn">Start match<small id="startSub"></small></button></div>
+</section>
+
+<!-- ================= SESSION ================= -->
+<section id="session" class="hidden">
+  <div class="topbar">
+    <button class="ghost" id="homeBtn">← Home</button>
+    <div class="row" style="gap:8px">
+      <span class="pill" id="micPill">mic off</span>
+
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="stFirst">0/0</b><span id="stFirstLbl">1st round</span></div>
+    <div class="stat"><b id="stStreak">0</b><span>🔥 Streak</span></div>
+    <div class="stat"><b id="stRds">0</b><span>Rounds</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="label" id="tgtLabel">Target</div>
+        <div class="big"><span id="dist">—</span><span class="unit" id="distUnit">yd</span></div>
+        <div class="note" id="plateLine" style="font-size:14px;margin-top:4px"></div>
+        <div class="label" style="margin-top:12px">Wind</div>
+        <div class="wind"><span id="windSpd">—</span><span class="unit">mph</span></div>
+        <div class="wind" style="font-size:22px">from <span id="windClock">—</span> o'clock</div>
+        <div id="moverLine" class="wind hidden" style="font-size:21px;line-height:1.15;color:var(--amber);margin-top:6px"></div>
+      </div>
+      <svg id="clock" viewBox="-60 -60 120 120" width="132" height="132" style="flex:none"></svg>
+    </div>
+
+    <button class="sec" id="playBtn" style="margin-top:12px;font-size:17px">▶ Play stage</button>
+    <div class="grid hidden" id="tnav" style="grid-template-columns:1fr 2fr;margin-top:8px">
+      <button class="sec" id="prevT">◀ Prev</button><button id="nextT" style="font-size:17px">Next target →</button>
+    </div>
+    <div id="tlist" class="tlist hidden"></div>
+
+    <div class="timer hidden" id="timer"><span class="t" id="tTime">0:00</span><div class="tb"><i id="tFill"></i></div><span class="ps" id="tState"></span></div>
+    <div id="status" style="margin-top:12px">—</div>
+    <div class="meter"><i id="lvl"></i><b id="thr"></b></div>
+
+    <div id="entry" class="hidden">
+      <div class="grid hold" style="margin-top:12px">
+        <div><div class="label">Elev dialed</div><input id="inElev" type="number" step="0.1" inputmode="decimal" placeholder="0.0"></div>
+        <div><div class="label" id="windLbl">Wind held</div><input id="inWind" type="number" step="0.1" inputmode="decimal" placeholder="0.0">
+          <div class="seg"><button id="segL">L</button><button id="segR" class="on">R</button></div></div>
+      </div>
+      <button id="gradeBtn" style="margin-top:10px">Grade shot</button>
+    </div>
+    <div id="batch" class="hidden" style="margin-top:12px">
+      <div class="label">Enter what you shot</div>
+      <div class="note" style="margin-top:2px">Elevation dialed and wind held (wind + lead on movers). Fill in as many shots as you want. Blank rows aren't graded. Tap ✕ on any shot you didn't take.</div>
+      <div id="batchRows"></div>
+      <button id="gradeAllBtn" style="margin-top:12px">Grade stage</button>
+    </div>
+    <button id="readyBtn" class="hidden" style="margin-top:10px">Shooter ready</button>
+    <button id="doneBtn" class="hidden" style="margin-top:10px;font-family:var(--cond);font-size:24px;letter-spacing:.05em;text-transform:uppercase;padding:18px">✓ Stage complete</button>
+    <button id="nextBtn" class="hidden" style="margin-top:10px">Next target</button>
+    <button id="nextStageBtn" class="hidden" style="margin-top:10px">Next stage →</button>
+
+    <div id="gradeBox" class="grade hidden"></div>
+
+    <div class="grid" style="margin-top:12px">
+      <button class="sec hidden" id="shotBtn">Shot</button>
+      <button class="sec" id="skipBtn" style="grid-column:1 / -1">End match</button>
+    </div>
+  </div>
+
+  <div id="plotCard" class="card hidden">
+    <div class="h"><span class="label">📍 Impact plot · this session</span><span class="note" id="plotN"></span></div>
+    <div id="sessPlot"></div>
+  </div>
+
+  <div id="logCard" class="card hidden">
+    <div class="label" style="margin-bottom:6px">Session log</div>
+    <table><thead><tr><th>Stg</th><th>Dist</th><th>Wind</th><th>1st call err</th><th>Rds</th><th></th></tr></thead><tbody id="logBody"></tbody></table>
+    <button class="sec" id="clearLog" style="margin-top:10px">Clear log</button>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="safety">
+  <div class="sheet">
+    <h2>⚠ Safety first</h2>
+    <p class="note" style="margin:0 0 6px;font-size:14px">This app calls stages and listens for shots, so it may be running while a firearm is in your hands. Read and check every box before you train.</p>
+    <label class="chk"><input type="checkbox"><span><b>Dry fire:</b> I've visually and physically checked that my rifle is <b>unloaded</b> (chamber and magazine empty), and there's <b>no live ammunition in the room</b>.</span></label>
+    <label class="chk"><input type="checkbox"><span><b>Live fire:</b> I'm on an approved range and will follow all <b>range rules and Range Officer commands</b>. The app's beep is not a range command.</span></label>
+    <label class="chk"><input type="checkbox"><span>I'll treat every firearm as if it's loaded, keep the <b>muzzle pointed in a safe direction</b>, and keep my <b>finger off the trigger</b> until I'm on target and ready to fire.</span></label>
+    <label class="chk"><input type="checkbox"><span>I'll wear <b>eye and ear protection</b> and put my phone where it won't distract me and is never in front of the muzzle.</span></label>
+    <label class="chk"><input type="checkbox"><span>I understand this app is <b>only a training aid</b>. It doesn't replace safe gun handling, and <b>I'm responsible for my own safety</b> and the safety of others.</span></label>
+    <button id="safetyOk" style="margin-top:14px" disabled>I agree. Let's train</button>
+    <button class="ghost" id="safetyCancel" style="width:100%;margin-top:4px">Not now</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $=id=>document.getElementById(id);
+  const MAX_RANGE=1200;
+  const DEFAULT_DOPE=[[100,0.0,0.1,0.11],[200,0.5,0.2,0.23],[300,1.1,0.3,0.36],[400,1.8,0.4,0.49],[500,2.4,0.5,0.63],[600,3.1,0.6,0.78],
+    [700,3.9,0.7,0.94],[800,4.8,0.8,1.11],[900,5.7,1.0,1.29],[1000,6.8,1.1,1.48],[1100,8.0,1.3,1.69],[1200,9.3,1.4,1.91]]; // EXAMPLE ONLY: dist, elev mil, wind mil/10mph, TOF s
+  const DEFAULTS={tCount:'1',minD:300,maxD:1000,minW:3,maxW:15,units:'yd',roundTo:'1',tolE:0.2,tolW:0.2,maxRds:5,
+    onMiss:'reengage',brief:'all',callRate:0.8,gapMin:3,gapMax:500,nextDelay:6,micThr:0.5,movers:'0',mvMin:2,mvMax:4,parTime:90,autoVoice:false,sizeMode:'mixed',gradeBy:'size',positions:1,order:'called',safetyDay:'',match:false,matchStages:5,dope:DEFAULT_DOPE,dopeSet:false};
+
+  // ---------- config ----------
+  let cfg;
+  try{
+    const old=JSON.parse(localStorage.getItem('ldt3')||'null');
+    cfg=Object.assign({},DEFAULTS,old?{dope:old.dope,dopeSet:!!old.dopeSet}:{},JSON.parse(localStorage.getItem('ldt4')||'{}'));
+  }catch(e){ cfg={...DEFAULTS}; }
+  const save=()=>{ try{ localStorage.setItem('ldt4',JSON.stringify(cfg)); }catch(e){} };
+  const STR=['units','roundTo','brief','gradeBy'];
+  const BOOL=['autoVoice'];
+  const adv=['units','roundTo','tolE','tolW','brief','gradeBy','callRate','gapMin','gapMax','micThr'];
+  adv.push('autoVoice');
+  adv.forEach(k=>{ $(k).value=BOOL.includes(k)?String(cfg[k]):cfg[k]; const h=()=>{ cfg[k]=BOOL.includes(k)?$(k).value==='true':STR.includes(k)?$(k).value:parseFloat($(k).value); save(); refresh(); }; $(k).oninput=h; $(k).onchange=h; });
+
+  // ---------- home: targets ----------
+  const T_OPTS=['1','2','3','4','5','6','rand'];
+  $('tChips').innerHTML=T_OPTS.map(v=>`<button class="chip" data-t="${v}">${v==='rand'?'🎲':v}</button>`).join('');
+  $('tChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cfg.tCount=b.dataset.t; save(); refresh(); });
+  const maxTargets=()=>cfg.tCount==='rand'?6:+cfg.tCount;
+  function renderPlates(){
+    const n=maxTargets(), sizes=[22,18,26,16,20,24], q=cfg.tCount==='rand';
+    const mv=cfg.movers==='rand'?0:Math.min(+cfg.movers,n);
+    $('plates').innerHTML=Array.from({length:n},(_,i)=>{ const s=sizes[i%6], isMv=i>=n-mv;
+      return `<div class="plate ${isMv?'mv':''}" style="animation-delay:${i*40}ms;opacity:${q&&i>1?.35:1}"><i style="width:${s}px;height:${s}px"></i><b>${isMv?'↔':''}</b></div>`; }).join('');
+  }
+  function renderMoverChips(){
+    const n=maxTargets(); if(cfg.movers!=='rand'&&+cfg.movers>n) cfg.movers=String(n);
+    const opts=[...Array(n+1).keys()].map(String).concat(n>1?['rand']:[]);
+    $('mChips').innerHTML=opts.map(v=>`<button class="chip" data-m="${v}" style="font-size:20px;padding:9px 0">${v==='rand'?'🎲':v}</button>`).join('');
+    $('mChips').querySelectorAll('.chip').forEach(b=>{ b.classList.toggle('on',b.dataset.m===cfg.movers); b.onclick=()=>{ cfg.movers=b.dataset.m; save(); refresh(); }; });
+    $('mRead').innerHTML = cfg.movers==='rand'?'random':cfg.movers==='0'?'none':`${cfg.movers} <small>mover${cfg.movers==='1'?'':'s'}</small>`;
+    $('mvBox').classList.toggle('hidden',cfg.movers==='0');
+    $('mvRead').innerHTML=`${cfg.mvMin}–${cfg.mvMax} <small>mph</small>`;
+  }
+
+  // ---------- home: dual sliders ----------
+  function dual(id,loEl,hiEl,minGap,get,set){
+    const lo=$(loEl), hi=$(hiEl), fill=$(id).querySelector('.fill'), mn=+lo.min, mx=+lo.max;
+    const paint=()=>{ const a=(lo.value-mn)/(mx-mn)*100, b=(hi.value-mn)/(mx-mn)*100; fill.style.left=a+'%'; fill.style.width=(b-a)+'%'; };
+    const sync=()=>{ const [l,h]=get(); lo.value=l; hi.value=h; paint(); };
+    lo.oninput=()=>{ if(+lo.value>+hi.value-minGap) lo.value=+hi.value-minGap; set(+lo.value,+hi.value); };
+    hi.oninput=()=>{ if(+hi.value<+lo.value+minGap) hi.value=+lo.value+minGap; set(+lo.value,+hi.value); };
+    return sync;
+  }
+  const syncD=dual('dDual','dLo','dHi',25,()=>[cfg.minD,cfg.maxD],(l,h)=>{ cfg.minD=l; cfg.maxD=h; save(); refresh(); });
+  const syncW=dual('wDual','wLo','wHi',1,()=>[cfg.minW,cfg.maxW],(l,h)=>{ cfg.minW=l; cfg.maxW=h; save(); refresh(); });
+  const syncMv=dual('mvDual','mvLo','mvHi',0,()=>[cfg.mvMin,cfg.mvMax],(l,h)=>{ cfg.mvMin=l; cfg.mvMax=h; save(); refresh(); });
+  const D_PRE=[['Short',100,500],['Mid',400,800],['Long',700,1200],['Full',100,1200]];
+  const W_PRE=[['Calm',0,5],['Moderate',5,12],['Heavy',10,20],['Full send',3,25]];
+  $('dPresets').innerHTML=D_PRE.map(([n,a,b])=>`<button class="pchip" data-a="${a}" data-b="${b}">${n} ${a}–${b}</button>`).join('');
+  $('wPresets').innerHTML=W_PRE.map(([n,a,b])=>`<button class="pchip" data-a="${a}" data-b="${b}">${n} ${a}–${b}</button>`).join('');
+  $('dPresets').querySelectorAll('button').forEach(b=>b.onclick=()=>{ cfg.minD=+b.dataset.a; cfg.maxD=+b.dataset.b; save(); refresh(); });
+  $('wPresets').querySelectorAll('button').forEach(b=>b.onclick=()=>{ cfg.minW=+b.dataset.a; cfg.maxW=+b.dataset.b; save(); refresh(); });
+
+  $('msChips').innerHTML=[1,3,5,8,10].map(v=>`<button class="chip" data-ms="${v}" style="font-size:20px;padding:10px 0">${v}</button>`).join('');
+  $('msChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cfg.matchStages=+b.dataset.ms; save(); refresh(); });
+  const secure = window.isSecureContext && /^https?:$/.test(location.protocol);
+  const micAPI = !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  $('micWhere').innerHTML = !micAPI||!secure
+    ? '<span class="warn">✕ The mic can\'t work here.</span> You opened this as a file or inside a preview. Put it on an https link (like Netlify Drop) and open that in Safari or Chrome. You can still train without it: the mic only counts shots.'
+    : '<span class="ok">✓ This page can use the mic.</span> Tap Test mic, allow access, then set the trigger level.';
+  let lastBoom=0;
+  $('micTest').onclick=async()=>{ ensureCtx(); await startMic(); };
+  const SZ=[['easy','Easy','3 MOA'],['medium','Medium','2 MOA'],['hard','Hard','1.5 MOA'],['mixed','Mixed','1.5–3']];
+  $('szChips').innerHTML=SZ.map(([v,l,m])=>`<button class="chip" data-sz="${v}" style="font-size:17px;padding:8px 0;line-height:1.1">${l}<br><span style="font-size:12px;font-weight:600;opacity:.75">${m}</span></button>`).join('');
+  $('szChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cfg.sizeMode=b.dataset.sz; save(); refresh(); });
+  $('tendReset').onclick=()=>{ if($('tendReset').dataset.sure){ hist=[]; saveHist(); refresh(); $('tendReset').textContent='Reset history'; delete $('tendReset').dataset.sure; }
+    else { $('tendReset').dataset.sure=1; $('tendReset').textContent='Tap again to erase all history'; } };
+  $('posChips').innerHTML=[1,2,3,4].map(v=>`<button class="chip" data-pos="${v}" style="font-size:20px;padding:9px 0">${v}</button>`).join('');
+  $('posChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cfg.positions=+b.dataset.pos; save(); refresh(); });
+  const ORD=[['called','As called'],['ladder','Ladder ↑ near→far'],['far','Ladder ↓ far→near']];
+  $('ordChips').innerHTML=ORD.map(([v,l])=>`<button class="chip" data-ord="${v}" style="font-size:14px;padding:10px 4px;font-family:var(--body)">${l}</button>`).join('');
+  $('ordChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cfg.order=b.dataset.ord; save(); refresh(); });
+  const P_OPTS=[45,60,90,120,180];
+  if(!(+cfg.parTime)){ cfg.parTime=90; save(); }
+  $('pChips').innerHTML=P_OPTS.map(v=>`<button class="chip" data-p="${v}" style="font-size:20px;padding:10px 0">${v}</button>`).join('');
+  $('pChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cfg.parTime=+b.dataset.p; save(); refresh(); });
+  const fmtT=ms=>{ const t=Math.max(0,ms)/1000; if(t<10) return t.toFixed(1); const m=Math.floor(t/60), sec=Math.floor(t%60); return `${m}:${String(sec).padStart(2,'0')}`; };
+  function refresh(){
+    const n=cfg.tCount;
+    $('tChips').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.t===n));
+    $('tRead').innerHTML = n==='rand' ? '2–6 <small>random</small>' : n==='1' ? '1 <small>target</small>' : `${n} <small>target stage</small>`;
+    $('msChips').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',+b.dataset.ms===cfg.matchStages));
+    $('msRead').innerHTML=`${cfg.matchStages} <small>stage${cfg.matchStages>1?'s':''}</small>`;
+    $('hThr').style.left=(cfg.micThr*100)+'%';
+    $('szChips').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.sz===cfg.sizeMode));
+    $('szRead').innerHTML=(SZ.find(x=>x[0]===cfg.sizeMode)||SZ[3])[2].replace('MOA','<small>MOA</small>').replace('1.5–3','1.5–3 <small>MOA</small>');
+    if(window.__histReady) renderTend();
+    $('posChips').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',+b.dataset.pos===(+cfg.positions||1)));
+    $('ordChips').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.ord===cfg.order));
+    $('orderBox').classList.toggle('hidden',cfg.tCount==='1');
+    const P=+cfg.positions||1, nT=cfg.tCount==='rand'?null:+cfg.tCount;
+    $('posRead').innerHTML = P===1?'1 <small>position</small>':`${P} <small>positions${nT?` · ${nT*P} shots`:''}</small>`;
+    renderMoverChips(); renderPlates();
+    $('pChips').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',+b.dataset.p===+cfg.parTime));
+    $('pRead').innerHTML=`${fmtT(cfg.parTime*1000)} <small>par</small>`;
+    cfg.maxD=Math.min(MAX_RANGE,cfg.maxD);
+    syncD(); syncW(); syncMv();
+    $('dRead').innerHTML=`${cfg.minD}–${cfg.maxD} <small>${cfg.units}</small>`;
+    $('wRead').innerHTML=`${cfg.minW}–${cfg.maxW} <small>mph</small>`;
+    $('dPresets').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.a===cfg.minD&&+b.dataset.b===cfg.maxD));
+    $('wPresets').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.a===cfg.minW&&+b.dataset.b===cfg.maxW));
+    $('thrVal').textContent=(+cfg.micThr).toFixed(2); $('thr').style.left=(cfg.micThr*100)+'%'; $('distUnit').textContent=cfg.units;
+    const Pp=+cfg.positions||1;
+    const tn=(n==='rand'?'2–6 targets':n==='1'?'1 target':`${n} targets`)+(Pp>1?` × ${Pp} positions`:'');
+    const mvTxt=cfg.movers==='0'?'':cfg.movers==='rand'?' · movers 🎲':` · ${cfg.movers} mover${cfg.movers==='1'?'':'s'}`;
+    $('startBtn').firstChild.textContent = 'Start match';
+    $('startSub').textContent=`${cfg.matchStages} stage${cfg.matchStages>1?'s':''} · ${tn}${mvTxt} · ${cfg.minD}–${cfg.maxD} ${cfg.units} · ${cfg.minW}–${cfg.maxW} mph${cfg.parTime?` · ${cfg.parTime}s`:''}`;
+    dopeSummary();
+  }
+
+  // ---------- dope ----------
+  function dopeSummary(){
+    const d=cfg.dope;
+    if(!d.length){ $('dopeBig').textContent='No dope'; $('dopeSmall').textContent='Add your dope below'; $('spark').innerHTML=''; return; }
+    $('dopeBig').innerHTML=cfg.dopeSet?`${d[0][0]}–${d[d.length-1][0]} ${cfg.units}`:'<span class="warn">Example dope</span>';
+    $('dopeSmall').innerHTML=cfg.dopeSet?`${d.length} rows · ${d[d.length-1][1].toFixed(1)} mil at ${d[d.length-1][0]}<br>${hasTOF()?'TOF ✓ for movers':'No TOF yet. Mover lead is estimated'}`:'Not your rifle. Add yours before training.';
+    // sparkline: elevation (amber) + wind (blue, dashed)
+    const W=120,H=58,p=5, x0=d[0][0], x1=d[d.length-1][0]||1, eMax=Math.max(...d.map(r=>r[1]),0.1), wMax=Math.max(...d.map(r=>r[2]),0.1);
+    const X=v=>p+(v-x0)/((x1-x0)||1)*(W-2*p), Y=(v,m)=>H-p-(v/m)*(H-2*p);
+    const path=(c,m)=>d.map((r,i)=>`${i?'L':'M'}${X(r[0]).toFixed(1)},${Y(r[c],m).toFixed(1)}`).join('');
+    $('spark').innerHTML=`<rect width="${W}" height="${H}" rx="10" fill="#0e1110"/>
+      <path d="${path(2,wMax)}" fill="none" stroke="#59b4ff" stroke-width="1.5" stroke-dasharray="3 3" opacity=".8"/>
+      <path d="${path(1,eMax)}" fill="none" stroke="#f2a93b" stroke-width="2.5" stroke-linecap="round"/>
+      ${d.map(r=>`<circle cx="${X(r[0]).toFixed(1)}" cy="${Y(r[1],eMax).toFixed(1)}" r="1.8" fill="#f2a93b"/>`).join('')}`;
+  }
+  function renderDope(){
+    const tb=$('dope').querySelector('tbody'); tb.innerHTML='';
+    cfg.dope.forEach((r,i)=>{ const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input type="number" inputmode="numeric" value="${r[0]}"></td><td><input type="number" step="0.1" inputmode="decimal" value="${r[1]}"></td><td><input type="number" step="0.1" inputmode="decimal" value="${r[2]}"></td><td><input type="number" step="0.01" inputmode="decimal" placeholder="opt" value="${r[3]??''}"></td><td><button class="ghost" data-del="${i}">✕</button></td>`;
+      tb.appendChild(tr); });
+    tb.querySelectorAll('input').forEach(x=>x.onchange=()=>{ cfg.dope=readDope(); cfg.dopeSet=true; save(); dopeSummary(); });
+    tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ cfg.dope.splice(+b.dataset.del,1); cfg.dopeSet=true; save(); renderDope(); dopeSummary(); });
+  }
+  function readDope(){ return [...$('dope').querySelectorAll('tbody tr')].map(tr=>{ const v=[...tr.querySelectorAll('input')].map(i=>parseFloat(i.value)); if(isNaN(v[3])) v[3]=null; return v; })
+      .filter(r=>r.slice(0,3).every(v=>!isNaN(v))).sort((a,b)=>a[0]-b[0]); }
+  $('addRow').onclick=()=>{ const l=cfg.dope[cfg.dope.length-1]||[0,0,0]; cfg.dope.push([l[0]+100,l[1],l[2],l[3]??null]); save(); renderDope(); };
+  $('resetDope').onclick=()=>{ cfg.dope=DEFAULT_DOPE.map(r=>[...r]); cfg.dopeSet=false; save(); renderDope(); dopeSummary(); };
+  // tabs
+  let openTab=null;
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
+    openTab = openTab===b.dataset.tab ? null : b.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('on',x.dataset.tab===openTab));
+    ['shot','table'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==openTab));
+    if(openTab==='table') renderDope();
+  });
+  function closeTabs(){ openTab=null; document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('on')); ['shot','table'].forEach(t=>$('tab-'+t).classList.add('hidden')); }
+
+  // parse / OCR
+  let ocrRows=[], ocrCols=[];
+  function parseText(text){
+    const rows=[];
+    text.split('\n').forEach(line=>{
+      const nums=(line.replace(/,/g,'.').match(/[-+]?\d+(?:\.\d+)?/g)||[]).map(Number);
+      if(nums.length<2) return; const d=nums[0]; if(!(d>=25&&d<=2500)) return; rows.push(nums);
+    });
+    return rows;
+  }
+  function guessCols(rows){
+    const n=Math.max(...rows.map(r=>r.length)), roles=Array(n).fill('ignore'); roles[0]='dist';
+    const col=j=>rows.map(r=>r[j]).filter(v=>v!==undefined).map(Math.abs);
+    const rising=v=>{ let up=0; for(let i=1;i<v.length;i++) if(v[i]>=v[i-1]) up++; return v.length<2||up/(v.length-1)>=.7; };
+    let e=-1;
+    for(let j=1;j<n;j++){ const v=col(j); if(v.length&&Math.max(...v)<=25&&Math.max(...v)>0.3&&rising(v)){ e=j; break; } }
+    if(e>0){ roles[e]='elev'; let w=-1; for(let j=e+1;j<n;j++){ const v=col(j); if(v.length&&Math.max(...v)<=6&&rising(v)){ roles[j]='wind'; w=j; break; } }
+      if(w>0) for(let j=n-1;j>w;j--){ const v=col(j); if(v.length&&Math.max(...v)<=4&&Math.min(...v)>0&&rising(v)&&!Number.isInteger(v[v.length-1])){ roles[j]='tof'; break; } } }
+    return roles;
+  }
+  function loadRows(rows){
+    const seen=new Map(); rows.forEach(r=>{ if(!seen.has(r[0])) seen.set(r[0],r); });
+    ocrRows=[...seen.values()].sort((a,b)=>a[0]-b[0]);
+    const n=Math.max(...ocrRows.map(r=>r.length));
+    ocrCols = n===3 ? ['dist','elev','wind'] : n===4 ? ['dist','elev','wind','tof'] : guessCols(ocrRows);
+    $('ocrStatus').textContent=`Found ${ocrRows.length} rows. Check them below.`;
+    renderOcr();
+  }
+  function renderOcr(){
+    const n=Math.max(...ocrRows.map(r=>r.length));
+    const opt=j=>`<select data-col="${j}" style="padding:4px;font-size:12px">${[['ignore','—'],['dist','Dist'],['elev','Elev'],['wind','Wind'],['tof','TOF']].map(([v,l])=>`<option value="${v}" ${ocrCols[j]===v?'selected':''}>${l}</option>`).join('')}</select>`;
+    let h='<thead><tr>'+Array.from({length:n},(_,j)=>`<th>${opt(j)}</th>`).join('')+'<th></th></tr></thead><tbody>';
+    ocrRows.forEach((r,i)=>{ h+='<tr>'+Array.from({length:n},(_,j)=>`<td><input data-r="${i}" data-c="${j}" value="${r[j]??''}" inputmode="decimal" style="padding:4px;min-width:54px"></td>`).join('')+`<td><button class="ghost" data-delr="${i}">✕</button></td></tr>`; });
+    $('ocrTable').innerHTML=h+'</tbody>';
+    $('ocrTable').querySelectorAll('select').forEach(s=>s.onchange=()=>{ ocrCols[+s.dataset.col]=s.value; });
+    $('ocrTable').querySelectorAll('input').forEach(inp=>inp.onchange=()=>{ ocrRows[+inp.dataset.r][+inp.dataset.c]=parseFloat(inp.value); });
+    $('ocrTable').querySelectorAll('[data-delr]').forEach(b=>b.onclick=()=>{ ocrRows.splice(+b.dataset.delr,1); renderOcr(); });
+    $('ocrReview').classList.remove('hidden');
+  }
+  function loadTesseract(){ return new Promise((res,rej)=>{ if(window.Tesseract) return res(); const sc=document.createElement('script');
+    sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'; sc.onload=()=>res(); sc.onerror=()=>rej(new Error('Could not load the text reader. Check your internet connection.')); document.head.appendChild(sc); }); }
+  function prepImage(file){
+    return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>{
+      const sc=Math.max(1,Math.min(3,2000/img.width)), c=document.createElement('canvas'); c.width=img.width*sc; c.height=img.height*sc;
+      const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(img,0,0,c.width,c.height);
+      const d=x.getImageData(0,0,c.width,c.height), p=d.data; let sum=0;
+      for(let i=0;i<p.length;i+=4){ const g=.299*p[i]+.587*p[i+1]+.114*p[i+2]; p[i]=p[i+1]=p[i+2]=g; sum+=g; }
+      const dark=sum/(p.length/4)<128;
+      for(let i=0;i<p.length;i+=4){ let g=p[i]; if(dark) g=255-g; g=g<150?0:255; p[i]=p[i+1]=p[i+2]=g; }
+      x.putImageData(d,0,0); URL.revokeObjectURL(img.src); res(c); };
+      img.onerror=()=>rej(new Error('Could not open image')); img.src=URL.createObjectURL(file); });
+  }
+  $('ocrFile').onchange=async e=>{
+    const files=[...e.target.files]; if(!files.length) return; const st=$('ocrStatus');
+    try{
+      st.textContent='Loading the text reader…'; await loadTesseract();
+      const worker=await Tesseract.createWorker('eng');
+      await worker.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
+      let all=[];
+      for(let i=0;i<files.length;i++){ st.textContent=`Reading screenshot ${i+1} of ${files.length}…`;
+        const {data:{text}}=await worker.recognize(await prepImage(files[i])); all=all.concat(parseText(text)); }
+      await worker.terminate();
+      if(!all.length){ st.textContent='No dope rows found. Try a sharper screenshot cropped to just the table.'; return; }
+      loadRows(all);
+    }catch(err){ st.textContent='Import failed: '+err.message; }
+    e.target.value='';
+  };
+  $('ocrCancel').onclick=()=>{ $('ocrReview').classList.add('hidden'); $('ocrStatus').textContent=''; };
+  $('ocrApply').onclick=()=>{
+    const di=ocrCols.indexOf('dist'), ei=ocrCols.indexOf('elev'), wi=ocrCols.indexOf('wind');
+    if(di<0||ei<0||wi<0){ $('ocrStatus').textContent='Set one column each to Dist, Elev and Wind.'; return; }
+    const mph=parseFloat($('ocrWindMph').value)||10;
+    const ti=ocrCols.indexOf('tof');
+    const dope=ocrRows.map(r=>[r[di],Math.abs(r[ei]),Math.round(Math.abs(r[wi])*(10/mph)*100)/100, ti>=0&&!isNaN(r[ti])?Math.abs(r[ti]):null])
+      .filter(r=>r.slice(0,3).every(v=>typeof v==='number'&&!isNaN(v))).sort((a,b)=>a[0]-b[0]);
+    if(dope.length<2){ $('ocrStatus').textContent='Need at least 2 complete rows.'; return; }
+    cfg.dope=dope; cfg.dopeSet=true; save(); renderDope();
+    $('ocrReview').classList.add('hidden'); closeTabs();
+    $('ocrStatus').innerHTML='<span class="ok">✓ Dope saved</span>'; dopeSummary();
+  };
+
+  refresh();
+
+  // ---------- plates, hit judging, impact history ----------
+  const PLATES=[4,6,8,10,12,14,16,18,20,24,30];
+  const SIZE_MOA={easy:3,medium:2,hard:1.5};
+  function plateFor(d){
+    const yd=cfg.units==='yd'?d:d*1.0936, moa=cfg.sizeMode==='mixed'?rnd(1.5,3):(SIZE_MOA[cfg.sizeMode]||2);
+    const want=moa*1.047*yd/100, inch=PLATES.reduce((a,b)=>Math.abs(b-want)<Math.abs(a-want)?b:a);
+    return {inch, rad:(inch/2)/(yd*36)*1000};           // rad = plate radius in mils
+  }
+  function judge(t,eErr,wErr){
+    const r=Math.hypot(eErr,wErr), frac=r/t.rad;
+    const zone=frac<=.35?'center':frac<=.75?'inside':'edge';
+    if(cfg.gradeBy==='tol'){ const eOK=Math.abs(eErr)<=cfg.tolE+1e-9, wOK=Math.abs(wErr)<=cfg.tolW+1e-9; return {hit:eOK&&wOK,eOK,wOK,frac,zone:'',off:0}; }
+    return {hit:frac<=1, eOK:Math.abs(eErr)<=t.rad, wOK:Math.abs(wErr)<=t.rad, frac, zone, off:Math.max(0,r-t.rad)};
+  }
+  const placeTxt=(e,w)=>{ const p=[]; if(Math.abs(w)>=0.05) p.push(`${Math.abs(w).toFixed(1)} ${w>0?'R':'L'}`); if(Math.abs(e)>=0.05) p.push(`${Math.abs(e).toFixed(1)} ${e>0?'high':'low'}`); return p.join(', '); };
+  const placeSpoken=(e,w)=>{ const p=[]; if(Math.abs(w)>=0.05) p.push(`${Math.abs(w).toFixed(1)} mil ${w>0?'right':'left'}`); if(Math.abs(e)>=0.05) p.push(`${Math.abs(e).toFixed(1)} mil ${e>0?'high':'low'}`); return p.join(', '); };
+  function resultTxt(j,e,w){
+    if(j.hit){ const pl=placeTxt(e,w); return `HIT${j.zone?` · ${j.zone}`:''}${pl&&j.zone!=='center'?` · ${pl}`:''}`; }
+    return `MISS · ${placeTxt(e,w)||'—'}`;
+  }
+  function plateSvg(t,e,w,hit,S=46){
+    const R=S*0.35, k=R/t.rad; let x=w*k, y=-e*k; const m=Math.hypot(x,y), lim=S/2-4; if(m>lim){ x*=lim/m; y*=lim/m; }
+    return `<svg width="${S}" height="${S}" viewBox="${-S/2} ${-S/2} ${S} ${S}" style="flex:none"><circle r="${R}" fill="#cfd5d0"/><circle r="${(R*.35).toFixed(1)}" fill="none" stroke="#0003"/><circle r="${(R*.75).toFixed(1)}" fill="none" stroke="#0002"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="${hit?'#45d07a':'#ff5a43'}" stroke="#111" stroke-width="1.2"/></svg>`;
+  }
+  let hist=[], sessShots=[];
+  try{ hist=JSON.parse(localStorage.getItem('ldt_hist')||'[]'); }catch(e){ hist=[]; }
+  window.__histReady=true; setTimeout(renderTend,0);
+  function saveHist(){ try{ localStorage.setItem('ldt_hist',JSON.stringify(hist.slice(-500))); }catch(e){} }
+  function recordShot(t,e,w,hit){
+    const sw=Math.sign(t.sol.wind), sl=Math.sign(t.sol.lead);
+    const rec={e:+e.toFixed(3),w:+w.toFixed(3),r:+t.rad.toFixed(4),d:t.d,m:t.mv?1:0,h:hit?1:0,
+      ow: sw? +(w*sw).toFixed(3) : null,          // + = held more wind than needed
+      ol: t.mv&&sl? +(w*sl).toFixed(3) : null,    // + = led too much
+      ts:Date.now()};
+    hist.push(rec); if(hist.length>500) hist=hist.slice(-500); saveHist(); sessShots.push(rec);
+  }
+  const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  function plotHTML(shots){
+    if(!shots.length) return '<p class="note" style="margin:0">No shots yet. After you grade some shots, this shows where they landed on the plate and whether you have a pattern.</p>';
+    const S=170, R=52, lim=S/2-6;
+    let dots='', cx=[], cy=[];
+    shots.forEach(sh=>{ let x=sh.w/sh.r*R, y=-sh.e/sh.r*R; cx.push(sh.w/sh.r); cy.push(sh.e/sh.r); const m=Math.hypot(x,y); if(m>lim){ x*=lim/m; y*=lim/m; }
+      dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${sh.h?'#45d07a':'#ff5a43'}" fill-opacity=".85" stroke="#0b0d0c" stroke-width=".8"/>`; });
+    const mx=mean(cx)*R, my=-mean(cy)*R;
+    const svg=`<svg width="${S}" height="${S}" viewBox="${-S/2} ${-S/2} ${S} ${S}" style="flex:none">
+      <rect x="${-S/2}" y="${-S/2}" width="${S}" height="${S}" rx="12" fill="#0e1110"/>
+      <line x1="${-S/2}" y1="0" x2="${S/2}" y2="0" stroke="#29302b"/><line x1="0" y1="${-S/2}" x2="0" y2="${S/2}" stroke="#29302b"/>
+      <circle r="${R}" fill="#cfd5d0" fill-opacity=".14" stroke="#cfd5d0" stroke-opacity=".7" stroke-width="1.5"/>
+      <circle r="${R*.75}" fill="none" stroke="#cfd5d0" stroke-opacity=".25" stroke-dasharray="3 3"/>
+      <circle r="${R*.35}" fill="none" stroke="#cfd5d0" stroke-opacity=".35" stroke-dasharray="3 3"/>
+      ${dots}
+      <g stroke="#f2a93b" stroke-width="2.5"><line x1="${mx-6}" y1="${my}" x2="${mx+6}" y2="${my}"/><line x1="${mx}" y1="${my-6}" x2="${mx}" y2="${my+6}"/></g>
+      <text x="${-S/2+6}" y="${S/2-6}" font-size="9" fill="#8a948d">ring = plate edge</text></svg>`;
+    const hits=shots.filter(x=>x.h), z=k=>hits.filter(x=>{ const f=Math.hypot(x.e,x.w)/x.r; return k==='c'?f<=.35:k==='i'?f>.35&&f<=.75:f>.75; }).length;
+    const me=mean(shots.map(x=>x.e)), mw=mean(shots.map(x=>x.w));
+    const st=shots.filter(x=>!x.m&&x.ow!=null), mvs=shots.filter(x=>x.m&&x.ol!=null);
+    const ow=mean(st.map(x=>x.ow)), ol=mean(mvs.map(x=>x.ol));
+    const tips=[];
+    if(shots.length>=5){
+      if(Math.abs(me)>=0.1) tips.push(`Shots average <b>${Math.abs(me).toFixed(2)} mil ${me>0?'high':'low'}</b>. If that holds over many shots, check your elevation reads, or your dope may be ${me>0?'high':'low'} at these distances.`);
+      if(st.length>=4&&Math.abs(ow)>=0.08) tips.push(`On static targets you're holding <b>${ow>0?'too much':'too little'} wind</b> by about ${Math.abs(ow).toFixed(2)} mil on average.`);
+      if(mvs.length>=3&&Math.abs(ol)>=0.1) tips.push(`On movers you're <b>${ol>0?'over-leading':'under-leading'}</b> by about ${Math.abs(ol).toFixed(2)} mil.`);
+      if(!tips.length) tips.push('No consistent pattern. Your misses are spread around center, so your reads are unbiased.');
+    }
+    return `<div class="plotwrap">${svg}<div class="ptxt">
+      <b>${hits.length}/${shots.length}</b> hits<br>
+      <span class="ok">●</span> center ${z('c')} · inside ${z('i')} · edge ${z('e')}<br>
+      <span style="color:var(--amber)">✚</span> average impact: ${placeTxt(me,mw)||'centered'}<br>
+      ${st.length?`Static wind: ${ow>=0?'+':''}${ow.toFixed(2)} mil<br>`:''}${mvs.length?`Mover lead: ${ol>=0?'+':''}${ol.toFixed(2)} mil<br>`:''}
+      <span class="note">+ = held more than needed</span></div></div>${tips.length?`<div class="tip">${tips.join('<br>')}</div>`:''}`;
+  }
+  function renderTend(){
+    const last=hist.slice(-200);
+    $('tendPlot').innerHTML=plotHTML(last);
+    $('tendN').textContent=hist.length?`last ${last.length} shots`:'';
+    $('tendReset').classList.toggle('hidden',!hist.length);
+  }
+  function renderSessPlot(){
+    $('plotCard').classList.toggle('hidden',!sessShots.length);
+    $('sessPlot').innerHTML=plotHTML(sessShots); $('plotN').textContent=`${sessShots.length} shots`;
+  }
+
+  // ---------- ballistics helpers ----------
+  function hasTOF(){ return cfg.dope.filter(r=>r[3]!=null&&!isNaN(r[3])).length>=2; }
+  function tofAt(d){ return hasTOF() ? interp(d,3,cfg.dope.filter(r=>r[3]!=null&&!isNaN(r[3]))) : interp(d,3,DEFAULT_DOPE); }
+  function interp(d,col,tbl){ const t=tbl||cfg.dope; if(!t.length) return NaN; if(d<=t[0][0]) return t[0][col];
+    for(let i=1;i<t.length;i++) if(d<=t[i][0]){ const a=t[i-1],b=t[i]; return a[col]+(b[col]-a[col])*(d-a[0])/(b[0]-a[0]); }
+    const a=t[t.length-2]||t[0], b=t[t.length-1]; return b[col]+(b[col]-a[col])*(d-b[0])/((b[0]-a[0])||1); }
+  const toClock=deg=>{ const c=Math.round(((deg%360)+360)%360/30)%12; return c===0?12:c; };
+  const clockFactor=c=>({12:0,6:0,1:.5,5:.5,7:.5,11:.5,2:.87,4:.87,8:.87,10:.87,3:1,9:1})[c];
+  function drawClock(deg){
+    const c=toClock(deg); let s=`<circle r="54" fill="#0e1110" stroke="#29302b" stroke-width="2"/>`;
+    for(let h=1;h<=12;h++){ const a=h/12*2*Math.PI; s+=`<text x="${Math.sin(a)*44}" y="${-Math.cos(a)*44+4}" text-anchor="middle" font-size="11" font-family="Barlow Condensed,sans-serif" fill="${h===c?'#f2a93b':'#8a948d'}" font-weight="${h===c?800:500}">${h}</text>`; }
+    s+=`<line x1="0" y1="0" x2="0" y2="-30" stroke="#59b4ff" stroke-width="2" stroke-dasharray="3 3"/><circle r="4" fill="#eef1ec"/>`;
+    const a=deg*Math.PI/180, ox=Math.sin(a)*34, oy=-Math.cos(a)*34, ix=Math.sin(a)*10, iy=-Math.cos(a)*10, ang=Math.atan2(iy-oy,ix-ox), L=8;
+    s+=`<line x1="${ox}" y1="${oy}" x2="${ix}" y2="${iy}" stroke="#f2a93b" stroke-width="4" stroke-linecap="round"/>`;
+    s+=`<polygon fill="#f2a93b" points="${ix},${iy} ${ix-L*Math.cos(ang-.5)},${iy-L*Math.sin(ang-.5)} ${ix-L*Math.cos(ang+.5)},${iy-L*Math.sin(ang+.5)}"/>`;
+    $('clock').innerHTML=s;
+  }
+
+  // ---------- speech ----------
+  let speaking=false, deafUntil=0, sayId=0;
+  function say(text,then,opts){
+    const chunks=Array.isArray(text)?text:[text], rate=(opts&&opts.rate)||1.05, gap=(opts&&opts.gap)||0;
+    speaking=true; const my=++sayId; let i=0, fired=false;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    if(!cfg.autoVoice){ setTimeout(()=>{ if(my!==sayId) return; speaking=false; deafUntil=performance.now()+300; then&&then(); }, 250); return; }
+    const finish=()=>{ if(fired||my!==sayId) return; fired=true; speaking=false; deafUntil=performance.now()+700; then&&then(); };
+    const next=()=>{ if(my!==sayId) return; if(i>=chunks.length) return finish();
+      const t=chunks[i++]; let ended=false; const end=()=>{ if(ended) return; ended=true; setTimeout(next,i<chunks.length?gap:0); };
+      try{ const u=new SpeechSynthesisUtterance(t); u.rate=rate; u.onend=end; u.onerror=end; speechSynthesis.speak(u); setTimeout(end,(1500+t.length*95)/rate); }catch(e){ end(); } };
+    next();
+  }
+  const hush=()=>{ sayId++; speaking=false; try{ speechSynthesis.cancel(); }catch(e){} };
+  const slow=()=>({rate:cfg.callRate||0.8,gap:900});
+
+  // ---------- voice commands ----------
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  let rec=null, recWanted=false, cmdBlocked=!SR;
+  const NUMW={one:1,won:1,two:2,to:2,too:2,three:3,tree:3,free:3,four:4,for:4,fore:4,five:5,six:6,sticks:6};
+  function startCmd(){
+    recWanted=true; if(cmdBlocked||rec) return;
+    try{ rec=new SR(); rec.lang='en-US'; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=3;
+      rec.onresult=e=>{ for(let i=e.resultIndex;i<e.results.length;i++) for(let a=0;a<e.results[i].length;a++) if(handleCmd(e.results[i][a].transcript)) return; };
+      rec.onerror=ev=>{ if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){ cmdBlocked=true; recWanted=false; if(state==='await') awaitStatus(); if(state==='ready') readyStatus(); } };
+      rec.onend=()=>{ rec=null; if(recWanted&&!cmdBlocked) setTimeout(()=>{ if(recWanted) startCmd(); },300); };
+      rec.start(); }catch(e){ rec=null; }
+  }
+  function stopCmd(){ recWanted=false; try{ rec&&rec.abort(); }catch(e){} rec=null; }
+  function handleCmd(raw){
+    if(state==='ready'){ if(/\bready\b/i.test(raw)){ stopCmd(); goReady(); return true; } return false; }
+    if(state!=='await') return false;
+    const nx=stage.seq[stage.k+1], t=raw.toLowerCase(); let ok=/\bnext\b/.test(t);
+    const num=w=>/^\d$/.test(w)?+w:NUMW[w];
+    const m=t.match(/target\s*(\d|[a-z]+)/); if(m&&num(m[1])===nx.ti+1) ok=true;
+    const q=t.match(/position\s*(\d|[a-z]+)/); if(q&&num(q[1])===nx.pos+1) ok=true;
+    if(ok){ stopCmd(); goNext(); return true; } return false;
+  }
+
+  // ---------- mic ----------
+  let analyser,buf,micOK=false,shown=0,actx=null;
+  function ensureCtx(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); actx.resume&&actx.resume(); }catch(e){} return actx; }
+  function beep(freq=1400,dur=0.35,vol=0.6){ const c=ensureCtx(); if(!c) return; try{ const o=c.createOscillator(), g=c.createGain();
+    o.type='square'; o.frequency.value=freq; g.gain.setValueAtTime(vol,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+dur); }catch(e){} }
+  async function startMic(){
+    if(analyser) return;
+    try{ const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      const ctx=ensureCtx(); await ctx.resume();
+      analyser=ctx.createAnalyser(); analyser.fftSize=1024; buf=new Float32Array(1024);
+      ctx.createMediaStreamSource(st).connect(analyser); micOK=true;
+      $('micPill').textContent='🎙 mic on'; $('micPill').style.color='var(--hit)';
+      $('micHome').textContent='✓ mic on'; $('micHome').style.color='var(--hit)'; $('micTest').textContent='Mic is on. Clap to test'; requestAnimationFrame(loop);
+    }catch(e){ $('micPill').textContent='mic off · optional'; $('micPill').style.color='var(--miss)';
+      $('micHome').textContent='✕ blocked'; $('micHome').style.color='var(--miss)';
+      $('boom').innerHTML='<span class="bad" style="font-size:15px">Mic blocked. Check the steps below.</span>'; }
+  }
+  function loop(){
+    analyser.getFloatTimeDomainData(buf); let p=0; for(let i=0;i<buf.length;i++){ const v=Math.abs(buf[i]); if(v>p)p=v; }
+    shown=Math.max(p,shown*.9); $('lvl').style.width=Math.min(100,shown*100)+'%'; $('hLvl').style.width=Math.min(100,shown*100)+'%';
+    if(!$('home').classList.contains('hidden')&&p>=cfg.micThr&&performance.now()-lastBoom>800){ lastBoom=performance.now(); $('boom').textContent='💥 Shot detected'; setTimeout(()=>{ if(performance.now()-lastBoom>=700) $('boom').textContent=''; },800); }
+    if(state==='live'&&!speaking&&performance.now()>deafUntil&&p>=cfg.micThr) heardShot();
+    requestAnimationFrame(loop);
+  }
+  let wake=null;
+  async function keepAwake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&!$('session').classList.contains('hidden')) keepAwake(); });
+
+  let side='R';
+  $('segL').onclick=()=>{ side='L'; $('segL').classList.add('on'); $('segR').classList.remove('on'); };
+  $('segR').onclick=()=>{ side='R'; $('segR').classList.add('on'); $('segL').classList.remove('on'); };
+
+  // ---------- stage generation ----------
+  const rnd=(a,b)=>a+Math.random()*(b-a), rint=(a,b)=>Math.floor(rnd(a,b+1));
+  function genDistances(n){
+    const lo=Math.max(1,Math.min(cfg.minD,cfg.maxD)), hi=Math.min(MAX_RANGE,Math.max(cfg.minD,cfg.maxD));
+    const r=parseFloat(cfg.roundTo)||1, gMin=Math.max(1,cfg.gapMin||3), gMax=Math.max(gMin,cfg.gapMax||500);
+    const q=v=>Math.min(hi,Math.max(lo,Math.round(v/r)*r));
+    for(let attempt=0;attempt<200;attempt++){
+      const out=[q(rnd(lo,hi))]; let ok=true;
+      for(let i=1;i<n;i++){ let placed=false;
+        for(let t=0;t<60;t++){ const prev=out[i-1], gap=rnd(gMin,gMax), dir=Math.random()<.5?-1:1;
+          let v=q(prev+dir*gap); if(v===prev||Math.abs(v-prev)<gMin||Math.abs(v-prev)>gMax) v=q(prev-dir*gap);
+          if(Math.abs(v-prev)>=gMin&&Math.abs(v-prev)<=gMax&&!out.includes(v)){ out.push(v); placed=true; break; } }
+        if(!placed){ ok=false; break; } }
+      if(ok) return out;
+    }
+    const s=new Set(); let k=0; while(s.size<n&&k++<5000) s.add(q(rnd(lo,hi))); return [...s];
+  }
+  // each target shifts one clock position (30°, inside the 45° limit); stage spans ≤3 positions (90°) to fit a ±50° field of fire
+  function genClocks(n){
+    for(let k=0;k<500;k++){ const seq=[rint(1,12)]; for(let i=1;i<n;i++) seq.push(seq[i-1]+(Math.random()<.5?-1:1));
+      if(Math.max(...seq)-Math.min(...seq)<=3) return seq.map(c=>((c-1)%12+12)%12+1); }
+    return Array.from({length:n},(_,i)=>i%2?4:3);
+  }
+  function solve(d,w,deg,mv){
+    const c=toClock(deg), factor=clockFactor(c), sgn=(deg>0&&deg<180)?1:(deg>180&&deg<360)?-1:0;
+    let lead=0, tof=null;
+    if(mv){ tof=tofAt(d); const ft=d*(cfg.units==='yd'?3:3.28084); lead=(mv.speed*1.46667*tof)/ft*1000*(mv.dir==='LR'?1:-1); }
+    return {elev:interp(d,1), wind:interp(d,2)*(w/10)*factor*sgn, w10:interp(d,2), factor, lead, tof};
+  }
+  const dirTxt=dir=>dir==='LR'?'left to right':'right to left';
+  const dirArrow=dir=>dir==='LR'?'→\u00a0L\u00a0to\u00a0R':'←\u00a0R\u00a0to\u00a0L';
+
+  // ---------- stage timer ----------
+  // clock runs only while it's the shooter's time: listening for a shot, or moving to the next target/position
+  let tickLast=0;
+  setInterval(()=>{
+    const now=performance.now(), dt=now-(tickLast||now); tickLast=now;
+    if(!stage||!stage.clockOn||stage.over||stage.shotDone) return;
+    const running = (state==='live');
+    if(running) stage.used+=dt;
+    paintTimer(running);
+    if(stage.par){
+      const left=stage.par-stage.used;
+      if(running&&!stage.c30&&stage.par>40000&&left<=30000){ stage.c30=true; if(!speaking) say('30 seconds.'); }
+      if(running&&!stage.c10&&stage.par>15000&&left<=10000){ stage.c10=true; if(!speaking) say('10 seconds.'); }
+      if(left<=0) timeUp();
+    }
+  },100);
+  function paintTimer(running){
+    const el=$('timer'); if(!stage||!stage.clockOn){ el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    if(stage.par){ const left=stage.par-stage.used;
+      $('tTime').textContent=fmtT(left); $('tFill').style.width=Math.max(0,left/stage.par*100)+'%';
+      el.classList.toggle('warn',left<=30000&&left>10000); el.classList.toggle('crit',left<=10000);
+    } else { $('tTime').textContent=fmtT(stage.used); $('tFill').style.width='100%'; }
+    const done=stage.over||stage.shotDone;
+    el.classList.toggle('paused',!running&&!done);
+    $('tState').textContent = done?'':(running?'':'paused');
+  }
+  function startClock(){ stage.clockOn=true; stage.used=0; tickLast=performance.now(); beep(); paintTimer(true); }
+  function timeUp(){
+    if(stage.over||stage.shotDone) return;
+    stopCmd(); hush(); beep(700,0.6); stage.timedOut=true; openBatch();
+  }
+
+  // ---------- session / stage engine ----------
+  // A stage = plates (targets) × positions. stage.seq is the engagement order: every target from position 1,
+  // then every target from position 2, and so on. One shot per engagement, 1 point per hit. Every stage, from
+  // a single plate to 6 plates × 4 positions, runs the same way: brief → ready → beep → shoot it all → enter data → grade.
+  let stage=null, state='idle', stageNo=0, log=[], streak=0, match=null;
+  const U=()=>cfg.units==='yd'?'yards':'meters';
+  const curE=()=>stage.seq[stage.k];
+  const cur=()=>stage.targets[curE().ti];
+  const multiT=()=>stage.targets.length>1;
+  const eLabel=e=>`${stage.P>1?`P${e.pos+1} `:''}${multiT()?`T${e.ti+1}`:''}`.trim();
+  const tgtSpeech=i=>{ const t=stage.targets[i]; return `${multiT()?`Target ${i+1}.`:'Target.'}${t.mv?' Mover.':''} ${t.d} ${U()}.${t.mv?` Moving ${dirTxt(t.mv.dir)}, ${t.mv.speed} miles per hour.`:''} Wind ${stage.w} miles per hour.`; };
+  function engSpeech(k){
+    const e=stage.seq[k], prev=stage.seq[k-1], t=stage.targets[e.ti];
+    const pos = stage.P>1 && (!prev||prev.pos!==e.pos) ? `Position ${e.pos+1}. ` : '';
+    const seen = stage.seq.slice(0,k).some(x=>x.ti===e.ti);
+    return pos + (seen ? `${multiT()?`Target ${e.ti+1}, `:''}${t.d}.` : tgtSpeech(e.ti));
+  }
+  function briefChunks(){
+    const n=stage.targets.length, P=stage.P, tot=stage.seq.length;
+    const head = n===1&&P===1 ? [] : [`Stage. ${n} target${n>1?'s':''}${P>1?`, ${P} positions`:''}. ${tot} rounds.`];
+    const body = (cfg.brief==='all'||n===1) ? stage.targets.map((_,i)=>tgtSpeech(i)) : [tgtSpeech(0)];
+    const tail=[];
+    if(P>1) tail.push(`From each position, engage ${n===2?'targets 1 and 2':n>2?`targets 1 through ${n}`:'the target'}.`);
+    if(n>1&&cfg.order!=='called') tail.push(cfg.order==='ladder'?'Ladder, near to far.':'Ladder, far to near.');
+    return head.concat(body,tail);
+  }
+  function newStage(){
+    stopCmd();
+    let n = cfg.tCount==='rand' ? rint(2,6) : parseInt(cfg.tCount);
+    const P = Math.max(1,Math.min(4,+cfg.positions||1));
+    const w=Math.round(rnd(Math.min(cfg.minW,cfg.maxW),Math.max(cfg.minW,cfg.maxW)));
+    let dists=genDistances(n); n=dists.length;
+    if(cfg.order==='ladder') dists.sort((a,b)=>a-b); else if(cfg.order==='far') dists.sort((a,b)=>b-a);
+    const clocks=genClocks(n);
+    const mvCount = cfg.movers==='rand' ? rint(0,n) : Math.min(n,+cfg.movers||0);
+    const idxs=[...Array(n).keys()].sort(()=>Math.random()-.5).slice(0,mvCount);
+    stageNo++; if(match) match.cur++;
+    const targets=dists.map((d,i)=>{ const c=clocks[i], deg=(c%12)*30;
+      const mv = idxs.includes(i) ? {speed:Math.round(rnd(Math.min(cfg.mvMin,cfg.mvMax),Math.max(cfg.mvMin,cfg.mvMax))*2)/2, dir:Math.random()<.5?'LR':'RL'} : null;
+      const pl=plateFor(d); return {d,c,deg,mv,inch:pl.inch,rad:pl.rad,sol:solve(d,w,deg,mv)}; });
+    const seq=[]; for(let p=0;p<P;p++) for(let i=0;i<n;i++) seq.push({ti:i,pos:p,fired:false,result:null,err:null,timedOut:false});
+    stage={no:stageNo,w,P,targets,seq,k:0,view:0,t0:performance.now(),par:(match?(+cfg.parTime||90):(+cfg.parTime||0))*1000,used:0,clockOn:false,over:false,shotDone:false,c30:false,c10:false,timedOut:false};
+    $('windSpd').textContent=w;
+    $('gradeBox').classList.add('hidden'); ['nextBtn','entry','readyBtn','nextStageBtn','batch','doneBtn'].forEach(id=>$(id).classList.add('hidden'));
+    state='speaking'; showCurrent(); paintTimer(false);
+    const title = match?`Stage ${match.cur} of ${match.total}`:`Stage ${stage.no}`;
+    setStatus('',title,`${n} target${n>1?'s':''}${P>1?` × ${P} positions`:''} · ${seq.length} round${seq.length>1?'s':''}. Read or play the data`);
+    say(briefChunks(), awaitReady, slow());
+  }
+  function readyStatus(){ setStatus('','Get your data', '<span style="color:var(--amber)">Muzzle safe direction · finger off the trigger</span><br>'+(cmdBlocked?'Tap ▶ Play to hear it. Tap Shooter ready when set':'Tap ▶ Play to hear it. Say "ready" or tap Shooter ready')); }
+  function awaitReady(){ state='ready'; readyStatus(); $('readyBtn').classList.remove('hidden'); startCmd(); }
+  function goReady(){ if(state!=='ready') return; stopCmd(); $('readyBtn').classList.add('hidden'); state='speaking'; standBy(); }
+  function standBy(){
+    const my=stage;
+    setStatus('','Stand by','Timer starts on the beep');
+    say('Stand by.', ()=>{ setTimeout(()=>{ if(stage!==my) return; startClock(); armListen(); }, 1000+Math.random()*2000); });
+  }
+  function showCurrent(){
+    const v=stage.view||0, t=stage.targets[v];
+    const sl = match?`Stage ${match.cur}/${match.total}`:`Stage ${stage.no}`;
+    $('tgtLabel').textContent = [sl, multiT()?`Target ${v+1} of ${stage.targets.length}`:'', stage.P>1?`${stage.P} positions`:''].filter(Boolean).join(' · ');
+    $('dist').textContent=t.d; $('windClock').textContent=t.c; drawClock(t.deg);
+    $('plateLine').textContent='';
+    $('tnav').classList.toggle('hidden',!multiT());
+    $('nextT').textContent = v<stage.targets.length-1 ? `Next target → T${v+2}` : 'Back to T1 ↺';
+    $('moverLine').classList.toggle('hidden',!t.mv); if(t.mv) $('moverLine').textContent=`MOVER ${t.mv.speed} mph ${dirArrow(t.mv.dir)}`;
+    renderTargets();
+  }
+  function renderTargets(){
+    const box=$('tlist'); if(!stage||(!multiT()&&stage.P===1)){ box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    const e=curE();
+    box.innerHTML=stage.targets.map((t,i)=>{
+      const known=cfg.brief==='all'||stage.seq.slice(0,stage.k+1).some(x=>x.ti===i);
+      const dots=stage.seq.filter(x=>x.ti===i).map(x=>`<span style="color:${x.result==='hit'?'var(--hit)':x.result==='miss'?'var(--miss)':x.fired?'var(--amber)':'#4a524c'}">●</span>`).join('');
+      const isCur=i===(stage.view||0);
+      return `<div class="tchip ${isCur?'cur':''}" data-v="${i}"><div class="n">T${i+1} <span style="letter-spacing:1px">${dots}</span></div><div class="d">${known?t.d:'—'}</div><div class="n">${known?`${stage.w} mph @ ${t.c}`:'&nbsp;'}</div>${known&&t.mv?`<div class="n" style="color:var(--amber)">↔ ${t.mv.speed} mph ${t.mv.dir==='LR'?'→':'←'}</div>`:''}</div>`;
+    }).join('');
+    box.querySelectorAll('.tchip').forEach(c=>c.onclick=()=>viewTarget(+c.dataset.v));
+  }
+  function viewTarget(i){ if(!stage) return; stage.view=(i+stage.targets.length)%stage.targets.length; showCurrent(); }
+  function setStatus(cls,main,sub){ const s=$('status'); s.className=''; void s.offsetWidth; s.className=cls; s.innerHTML=main+(sub?`<small>${sub}</small>`:''); }
+  function armListen(){
+    if(stage.over||stage.shotDone) return;
+    state='live'; stage.heard=0; deafUntil=performance.now()+400;
+    $('nextBtn').classList.add('hidden'); $('doneBtn').classList.remove('hidden');
+    liveStatus(); renderTargets();
+  }
+  function liveStatus(){
+    const n=stage.seq.length;
+    setStatus('', 'Stage live', `${n} round${n>1?'s':''}${stage.P>1?` · ${stage.P} positions`:''} · tap Stage complete when done${micOK?` · 🎙 ${stage.heard} heard`:''}`);
+  }
+  let lastHeard=0;
+  function heardShot(){   // optional mic counter during a live stage
+    if(state!=='live') return; const now=performance.now(); if(now-lastHeard<500) return; lastHeard=now;
+    stage.heard++; liveStatus();
+  }
+  function stageComplete(){ if(state!=='live') return; $('doneBtn').classList.add('hidden'); beep(1000,0.15,0.4); openBatch(); }
+  function onShot(){
+    if(state!=='listen') return;
+    deafUntil=performance.now()+1200;
+    curE().fired=true; stats(); renderTargets();
+    if(stage.k<stage.seq.length-1){
+      state='await'; awaitStatus();
+      const nx=stage.seq[stage.k+1], mv=nx.pos!==curE().pos;
+      $('nextBtn').textContent = mv?`Position ${nx.pos+1} · ${multiT()?`T${nx.ti+1}`:'go'} →`:`Target ${nx.ti+1} →`;
+      $('nextBtn').classList.remove('hidden'); startCmd();
+    } else openBatch();
+  }
+  function awaitStatus(){
+    const nx=stage.seq[stage.k+1], moving=nx.pos!==curE().pos, lb=eLabel(curE());
+    const say1 = moving ? `Move to position ${nx.pos+1}, then ${cmdBlocked?'tap the button':'say "next"'}` : (cmdBlocked?`Tap "Target ${nx.ti+1}"`:`Say "next" or "target ${nx.ti+1}"`);
+    setStatus('', `${lb||'Shot'} fired`, say1);
+  }
+  function goNext(){
+    if(state!=='await') return;
+    stopCmd(); $('nextBtn').classList.add('hidden'); stage.k++; state='speaking'; showCurrent();
+    setStatus('', eLabel(curE())||'Next', 'Data on screen · ▶ Play to hear it');
+    say([engSpeech(stage.k)], armListen, slow());
+  }
+  // ---- data entry for the whole stage ----
+  function openBatch(){
+    stage.shotDone=true; state='batch'; stopCmd(); hush(); paintTimer(false);
+    ['nextBtn','readyBtn','entry'].forEach(id=>$(id).classList.add('hidden'));
+    renderTargets();
+    $('doneBtn').classList.add('hidden');
+    stage.seq.forEach(e=>e.fired=true);
+    setStatus('enter', stage.timedOut?'TIME':'Stage complete', `${(stage.used/1000).toFixed(1)}s · enter your data for each shot${stage.timedOut?' · ✕ any you didn\'t get off':''}`);
+    $('batchRows').innerHTML=stage.seq.map((e,k)=>{
+      const t=stage.targets[e.ti];
+      const lbl=`<div class="bt"><b>${eLabel(e)||'Shot'}</b><span>${t.d} · ${t.inch}″${t.mv?' · mover':''}</span></div>`;
+      if(!e.fired) return `<div class="brow ns">${lbl}<div class="note" style="grid-column:2/5">No shot (time)</div></div>`;
+      return `<div class="brow" data-k="${k}">${lbl}
+        <input class="be" type="number" step="0.1" inputmode="decimal" placeholder="Elev">
+        <input class="bw" type="number" step="0.1" inputmode="decimal" placeholder="${t.mv?'W+lead':'Wind'}">
+        <button class="sec lr" data-side="R">R</button><button class="sec nsb" title="No shot">✕</button></div>`;
+    }).join('');
+    $('batchRows').querySelectorAll('.lr').forEach(b=>b.onclick=()=>{ b.dataset.side=b.dataset.side==='R'?'L':'R'; b.textContent=b.dataset.side; });
+    $('batchRows').querySelectorAll('.nsb').forEach(b=>b.onclick=()=>{ const r=b.closest('.brow'); r.classList.toggle('off'); b.textContent=r.classList.contains('off')?'↺':'✕'; });
+    const ins=[...$('batchRows').querySelectorAll('input')];
+    ins.forEach((inp,k)=>inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); ins[k+1]?ins[k+1].focus():gradeAll(); } }));
+    $('gradeAllBtn').textContent = 'Grade stage';
+    $('batch').classList.remove('hidden');
+    beep(1000,0.15,0.4);
+    if(cfg.autoVoice) say('Stage fired. Enter your data.');
+  }
+  function gradeAll(){
+    if(state!=='batch') return;
+    $('batchRows').querySelectorAll('.brow.off[data-k]').forEach(r=>{ stage.seq[+r.dataset.k].fired=false; });
+    const rows=[...$('batchRows').querySelectorAll('.brow[data-k]:not(.off)')];
+    try{ document.activeElement.blur(); }catch(e){}
+    const out=[];
+    stage.seq.forEach((e,k)=>{
+      const t=stage.targets[e.ti];
+      if(!e.fired){ e.result='miss'; e.timedOut=!!stage.timedOut; streak=0; addLog(e); out.push(`<div class="bres"><div class="top"><span>${eLabel(e)||'Shot'} · ${t.d} · ${t.inch}″</span><span class="bad">NO SHOT</span></div><div class="note">Dope: elev ${t.sol.elev.toFixed(1)} · ${t.mv?'W+lead':'wind'} ${fmtW(t.sol.wind+t.sol.lead)}</div></div>`); return; }
+      const r=rows.find(x=>+x.dataset.k===k), he=parseFloat(r.querySelector('.be').value), raw=parseFloat(r.querySelector('.bw').value), sd=r.querySelector('.lr').dataset.side;
+      const hw=isNaN(raw)?NaN:raw===0?0:(sd==='R'?Math.abs(raw):-Math.abs(raw));
+      if(isNaN(he)||isNaN(hw)){   // left blank (or half filled): not graded, not scored
+        e.result='ng'; addLog(e);
+        const parts=[];
+        if(!isNaN(he)){ const d=he-t.sol.elev; parts.push(`Elev ${he.toFixed(1)} vs dope ${t.sol.elev.toFixed(1)} (${Math.abs(d)<0.05?'on':(d>0?'+':'−')+Math.abs(d).toFixed(1)})`); }
+        if(!isNaN(hw)){ const d=hw-(t.sol.wind+t.sol.lead); parts.push(`${t.mv?'W+lead':'Wind'} ${fmtW(hw)} vs dope ${fmtW(t.sol.wind+t.sol.lead)} (${Math.abs(d)<0.05?'on':Math.abs(d).toFixed(1)+(d>0?' R':' L')})`); }
+        out.push(`<div class="bres"><div class="top"><span>${eLabel(e)||'Shot'} · ${t.d} · ${t.inch}″${t.mv?' · mover':''}</span><span style="color:var(--dim)">NOT GRADED</span></div><div class="note">${parts.length?parts.join(' · ')+'<br>':''}Dope: elev ${t.sol.elev.toFixed(1)} · ${t.mv?'W+lead':'wind'} ${fmtW(t.sol.wind+t.sol.lead)}</div></div>`);
+        return;
+      }
+      const eErr=he-t.sol.elev, wErr=hw-(t.sol.wind+t.sol.lead), j=judge(t,eErr,wErr);
+      e.err={e:eErr,w:wErr}; e.result=j.hit?'hit':'miss'; streak=j.hit?streak+1:0;
+      recordShot(t,eErr,wErr,j.hit); addLog(e);
+      out.push(gradeRow(t,e,he,hw,eErr,wErr,j));
+    });
+    $('batch').classList.add('hidden');
+    const g=$('gradeBox'); g.classList.remove('hidden'); g.innerHTML=out.join('');
+    renderSessPlot(); stats(); finishStage();
+  }
+  function finishStage(){
+    state='done'; stopCmd(); stage.over=true; renderTargets(); paintTimer(false);
+    const ng=stage.seq.filter(e=>e.result==='ng').length, n=stage.seq.length-ng, hits=stage.seq.filter(e=>e.result==='hit').length, secs=(stage.used/1000).toFixed(1);
+    const tTxt = stage.par ? `${secs}s of ${stage.par/1000}` : `${secs}s`;
+    const pct=n?hits/n:0;
+    setStatus(stage.timedOut?'miss':!n?'':pct===1?'hit':pct>=.5?'enter':'miss', stage.timedOut?`TIME · ${hits}/${n}`:`${hits}/${n} HIT`, `${tTxt}${ng?` · ${ng} not graded`:''}${streak>1?` · 🔥 ${streak} in a row`:''}`);
+    say(`${stage.timedOut?'Time. ':''}${hits} of ${n}.`,null,slow());
+    if(match){
+      match.stages.push({no:match.cur,hits,n,ng,time:stage.used,timedOut:stage.timedOut});
+      if(match.cur>=match.total){ setTimeout(matchSummary,1500); stats(); return; }
+      $('nextStageBtn').textContent=`Stage ${match.cur+1} of ${match.total} →`;
+    } else $('nextStageBtn').textContent='Next stage →';
+    $('nextStageBtn').classList.remove('hidden');
+    stats();
+  }
+  function matchSummary(){
+    state='done'; stopCmd(); match.done=true;
+    const pts=match.stages.reduce((a,x)=>a+x.hits,0), pos=match.stages.reduce((a,x)=>a+x.n,0);
+    const errs=log.filter(r=>r.ferr).map(r=>r.ferr), avg=k=>errs.length?(errs.reduce((a,e)=>a+Math.abs(e[k]),0)/errs.length).toFixed(2):'—';
+    const tt=match.stages.reduce((a,x)=>a+x.time,0)/1000;
+    const pct=pos?Math.round(pts/pos*100):0;
+    setStatus(pct>=70?'hit':pct>=40?'enter':'miss',`${pts} / ${pos}`,`${match.total>1?'Match':'Drill'} complete · ${pct}%`);
+    $('timer').classList.add('hidden'); ['nextStageBtn','readyBtn','nextBtn','entry','batch','doneBtn','tnav'].forEach(id=>$(id).classList.add('hidden'));
+    $('skipBtn').textContent='New match';
+    const g=$('gradeBox'); g.classList.remove('hidden');
+    g.innerHTML=`<div class="label" style="border:0;padding-top:4px">Scorecard</div>`+
+      match.stages.map(x=>`<div><span>Stage ${x.no}</span><span class="${x.n&&x.hits===x.n?'ok':''}">${x.hits}/${x.n}${x.ng?` <span class="note">(${x.ng} not graded)</span>`:''} · ${(x.time/1000).toFixed(1)}s${x.timedOut?' · <span class="bad">time</span>':''}</span></div>`).join('')+
+      `<div><span><b>Total</b></span><span><b>${pts}/${pos}</b> · ${tt.toFixed(0)}s</span></div>
+       <div><span>Avg elevation error (shots taken)</span><span>${avg('e')} mil</span></div>
+       <div><span>Avg wind error (shots taken)</span><span>${avg('w')} mil</span></div>`+
+      (sessShots.length?`<div class="label" style="border:0;padding-top:10px">Where your shots landed</div><div style="display:block;border:0">${plotHTML(sessShots)}</div>`:'');
+    say(`${match.total>1?'Match':'Stage'} complete. ${pts} of ${pos}.`, null, slow());
+  }
+  const fmtW=v=>Math.abs(v)<0.05?'0.0':`${Math.abs(v).toFixed(1)} ${v>0?'R':'L'}`;
+  function gradeRow(t,e,he,hw,eErr,wErr,j){
+    const lb=eLabel(e);
+    const name=`${lb?lb+' · ':''}${t.d} · ${t.inch}″${t.mv?` · mover ${t.mv.speed} mph`:''}`;
+    const ans=`Elev ${he.toFixed(1)} <span class="${j.eOK?'ok':'bad'}">(dope ${t.sol.elev.toFixed(1)})</span> · ${t.mv?'W+lead':'Wind'} ${fmtW(hw)} <span class="${j.wOK?'ok':'bad'}">(dope ${fmtW(t.sol.wind+t.sol.lead)}${t.mv?`: wind ${fmtW(t.sol.wind)} + lead ${fmtW(t.sol.lead)}`:''})</span>`;
+    const math=`<br>Wind ${t.sol.w10.toFixed(2)}/10 mph × ${(stage.w/10).toFixed(1)} × ${t.sol.factor.toFixed(2)} (${t.c} o'clock)${t.mv?` · lead ${t.mv.speed} mph × ${t.sol.tof.toFixed(2)}s TOF${hasTOF()?'':' (est.)'}`:''} · plate ±${t.rad.toFixed(2)} mil`;
+    return `<div class="bres"><div class="top" style="align-items:center">${plateSvg(t,eErr,wErr,j.hit)}<span style="flex:1">${name}</span><span class="${j.hit?'ok':'bad'}">${resultTxt(j,eErr,wErr)}</span></div>
+      <div class="note">${ans}${math}</div></div>`;
+  }
+  function addLog(e){
+    const t=stage.targets[e.ti], f=e.err, lb=eLabel(e);
+    log.unshift({s:(match?match.cur:stage.no)+(lb?'-'+lb.replace(' ',''):''),d:t.d,w:`${stage.w}@${t.c}${t.mv?' M':''}`,
+      err: f?`${f.e>=0?'+':''}${f.e.toFixed(1)}E ${f.w>=0?'+':''}${f.w.toFixed(1)}W`:(e.result==='ng'?'not graded':e.timedOut?'time':'no shot'),rds:e.fired?1:0,res:e.result,ferr:f});
+    $('logCard').classList.remove('hidden');
+    $('logBody').innerHTML=log.map(r=>`<tr><td>${r.s}</td><td>${r.d}</td><td>${r.w}</td><td>${r.err}</td><td>${r.rds}</td><td class="${r.res==='hit'?'ok':r.res==='ng'?'':'bad'}" style="${r.res==='ng'?'color:var(--dim)':''}">${r.res==='hit'?'✓':r.res==='ng'?'–':'✕'}</td></tr>`).join('');
+  }
+  function stats(){
+    $('stFirstLbl').textContent = 'Score';
+    $('stFirst').textContent=`${log.filter(r=>r.res==='hit').length}/${log.filter(r=>r.res!=='ng').length}`;
+    $('stStreak').textContent=streak;
+    $('stRds').textContent=log.reduce((a,r)=>a+r.rds,0);
+  }
+
+  // ---------- safety acknowledgement: required every time the page is opened, before any setup ----------
+  let safetyThen=null, safetyAgreed=false;
+  const boxes=[...document.querySelectorAll('#safety .chk input')];
+  boxes.forEach(b=>b.onchange=()=>{ b.closest('.chk').classList.toggle('on',b.checked); $('safetyOk').disabled=!boxes.every(x=>x.checked); });
+  function openSafety(){
+    // after agreeing, the link reopens the rules read-only with a Close button
+    boxes.forEach(b=>{ b.checked=safetyAgreed; b.disabled=safetyAgreed; b.closest('.chk').classList.toggle('on',safetyAgreed); });
+    $('safetyOk').disabled=!safetyAgreed; $('safetyOk').textContent = safetyAgreed?'Close':"I agree. Let's set up";
+    $('safetyCancel').classList.add('hidden'); $('safety').classList.remove('hidden');
+  }
+  $('safetyOk').onclick=()=>{ safetyAgreed=true; $('safety').classList.add('hidden'); document.body.style.overflow=''; };
+  $('safetyLink').onclick=()=>openSafety();
+  openSafety(); document.body.style.overflow='hidden';   // shown on open; can't be skipped
+
+  // ---------- navigation ----------
+  let warned=false;
+  $('startBtn').onclick=async()=>{
+    if(!safetyAgreed){ openSafety(); return; }
+    if(!cfg.dopeSet&&!warned){ warned=true;
+      $('dopeCard').scrollIntoView({behavior:'smooth',block:'center'});
+      $('ocrStatus').innerHTML='<span class="warn">This is example dope, not your rifle. Add yours above, or tap Start again to train with the example.</span>';
+      return; }
+    try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
+    ensureCtx();
+    $('home').classList.add('hidden'); $('session').classList.remove('hidden'); window.scrollTo(0,0);
+    match = {total:cfg.matchStages,cur:0,stages:[],done:false};
+    sessShots=[]; renderSessPlot();
+    log=[]; streak=0; stageNo=0; $('logBody').innerHTML=''; $('logCard').classList.add('hidden');
+    $('skipBtn').textContent = 'End match';
+    await startMic(); keepAwake(); stats(); newStage();
+  };
+  $('homeBtn').onclick=()=>{
+    stopCmd(); hush(); state='idle'; if(stage) stage.over=true;
+    try{ wake&&wake.release(); }catch(e){}
+    $('session').classList.add('hidden'); $('home').classList.remove('hidden'); window.scrollTo(0,0); refresh();
+  };
+  // ▶ Play: the only way the app talks unless Auto voice is on. Before the beep it reads the stage brief;
+  // while moving it reads the next engagement; otherwise the current one. It never changes the stage flow.
+  $('playBtn').onclick=()=>{
+    if(!stage||speaking||(match&&match.done)) return;
+    const chunks=briefChunks();
+    const rate=cfg.callRate||0.8, total=chunks.join(' ').length;
+    try{ speechSynthesis.cancel();
+      deafUntil=performance.now()+(1500+total*95)/rate+chunks.length*400;
+      chunks.forEach((c,i)=>{ const u=new SpeechSynthesisUtterance(c); u.rate=rate; if(i===chunks.length-1) u.onend=()=>{ deafUntil=performance.now()+700; }; speechSynthesis.speak(u); });
+    }catch(e){}
+  };
+  $('readyBtn').onclick=()=>goReady();
+  $('nextT').onclick=()=>viewTarget((stage.view||0)+1);
+  $('prevT').onclick=()=>viewTarget((stage.view||0)-1);
+  $('doneBtn').onclick=()=>stageComplete();
+  $('gradeAllBtn').onclick=()=>gradeAll();
+  $('nextStageBtn').onclick=()=>{ $('nextStageBtn').classList.add('hidden'); newStage(); };
+  $('shotBtn').onclick=()=>{ if(!speaking) onShot(); };
+  $('nextBtn').onclick=()=>goNext();
+  $('skipBtn').onclick=()=>{
+    stopCmd(); hush();
+    $('batch').classList.add('hidden'); $('doneBtn').classList.add('hidden');
+    if(match&&!match.done){ if(stage) stage.over=true; matchSummary(); return; }
+    if(match&&match.done){ match={total:cfg.matchStages,cur:0,stages:[],done:false}; log=[]; streak=0; stageNo=0; sessShots=[]; renderSessPlot(); $('logBody').innerHTML=''; $('logCard').classList.add('hidden'); $('skipBtn').textContent='End match'; stats(); }
+    if(stage) stage.over=true;
+    newStage(); };
+  $('clearLog').onclick=()=>{ log=[]; streak=0; $('logBody').innerHTML=''; $('logCard').classList.add('hidden'); stats(); };
+})();
+</script>
+</body>
+</html>
