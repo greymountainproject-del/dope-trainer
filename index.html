@@ -293,6 +293,9 @@
     <input id="micThr" type="range" min="0.05" max="1" step="0.01" style="padding:0">
     <label class="f">Voice commands ("ready", "next", "back", "target 3")</label>
     <select id="voiceCmds"><option value="true">On</option><option value="false">Off: buttons only</option></select>
+    <label class="f">During a stage, use the mic for</label>
+    <select id="liveMic"><option value="voice">Voice commands (next / back / target 3)</option><option value="shots">Shot counter (counts your shots)</option></select>
+    <div class="note" style="margin-top:4px">iPhone can't do both at once, so pick one.</div>
     <div class="note" id="vcNote" style="margin-top:6px;color:var(--amber)"></div>
     <details style="margin-top:12px">
       <summary class="label">How the mic works ▾</summary>
@@ -340,6 +343,7 @@
     <button class="ghost" id="homeBtn">← Home</button>
     <div class="row" style="gap:8px">
       <span class="pill" id="micPill">mic off</span>
+      <span class="pill hidden" id="vcPill" style="cursor:pointer">🗣</span>
       <button class="sec" id="helpBtn2" style="width:auto;padding:6px 12px;font-size:14px">?</button>
 
     </div>
@@ -445,7 +449,7 @@
   const DEFAULT_DOPE=[[100,0.0,0.1,0.11],[200,0.5,0.2,0.23],[300,1.1,0.3,0.36],[400,1.8,0.4,0.49],[500,2.4,0.5,0.63],[600,3.1,0.6,0.78],
     [700,3.9,0.7,0.94],[800,4.8,0.8,1.11],[900,5.7,1.0,1.29],[1000,6.8,1.1,1.48],[1100,8.0,1.3,1.69],[1200,9.3,1.4,1.91]]; // EXAMPLE ONLY: dist, elev mil, wind mil/10mph, TOF s
   const DEFAULTS={tCount:'1',minD:300,maxD:1000,minW:3,maxW:15,units:'yd',roundTo:'1',tolE:0.2,tolW:0.2,maxRds:5,
-    onMiss:'reengage',brief:'all',callRate:0.8,gapMin:3,gapMax:500,nextDelay:6,micThr:0.5,movers:'0',mvMin:2,mvMax:4,parTime:90,autoVoice:false,voiceCmds:true,tutSeen:false,sizeMode:'mixed',gradeBy:'size',positions:1,order:'called',safetyDay:'',match:false,matchStages:5,dope:DEFAULT_DOPE,dopeSet:false};
+    onMiss:'reengage',brief:'all',callRate:0.8,gapMin:3,gapMax:500,nextDelay:6,micThr:0.5,movers:'0',mvMin:2,mvMax:4,parTime:90,autoVoice:false,voiceCmds:true,liveMic:'voice',tutSeen:false,sizeMode:'mixed',gradeBy:'size',positions:1,order:'called',safetyDay:'',match:false,matchStages:5,dope:DEFAULT_DOPE,dopeSet:false};
 
   // ---------- config ----------
   let cfg;
@@ -454,10 +458,10 @@
     cfg=Object.assign({},DEFAULTS,old?{dope:old.dope,dopeSet:!!old.dopeSet}:{},JSON.parse(localStorage.getItem('ldt4')||'{}'));
   }catch(e){ cfg={...DEFAULTS}; }
   const save=()=>{ try{ localStorage.setItem('ldt4',JSON.stringify(cfg)); }catch(e){} };
-  const STR=['units','roundTo','brief','gradeBy'];
+  const STR=['units','roundTo','brief','gradeBy','liveMic'];
   const BOOL=['autoVoice','voiceCmds'];
   const adv=['units','roundTo','tolE','tolW','brief','gradeBy','callRate','gapMin','gapMax','micThr'];
-  adv.push('autoVoice','voiceCmds');
+  adv.push('autoVoice','voiceCmds','liveMic');
   adv.forEach(k=>{ $(k).value=BOOL.includes(k)?String(cfg[k]):cfg[k]; const h=()=>{ cfg[k]=BOOL.includes(k)?$(k).value==='true':STR.includes(k)?$(k).value:parseFloat($(k).value); save(); refresh(); }; $(k).oninput=h; $(k).onchange=h; });
 
   // ---------- home: targets ----------
@@ -798,40 +802,46 @@
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   let rec=null, recWanted=false, cmdBlocked=!SR;
   const NUMW={one:1,won:1,two:2,to:2,too:2,three:3,tree:3,free:3,four:4,for:4,fore:4,five:5,six:6,sticks:6};
-  // Speech recognition is fragile on phones (permission prompts, iOS ending the session constantly).
-  // Never retry in a tight loop: back off, and switch voice commands off after repeated failures or a denial.
+  // Speech recognition on iPhone: Safari wants it started from a tap, ends sessions often, and can't share
+  // the mic with the shot counter. So: start it from taps (Start / Shooter ready / Next stage), keep ONE session
+  // running through the whole stage, restart with a gentle backoff, and only give up on an explicit denial.
   let recFails=0, recLastStart=0;
+  function vc(msg,color){ const el=$('vcPill'); if(!el) return; el.textContent=msg; el.style.color=color||''; el.classList.toggle('hidden',!cfg.voiceCmds); }
   function blockCmds(why){
     cmdBlocked=true; recWanted=false; try{ rec&&rec.abort(); }catch(e){} rec=null;
-    $('vcNote').textContent = why==='denied' ? 'Voice commands are off (speech permission was denied). Use the buttons, or allow Speech Recognition for Safari in iPhone Settings and reopen the app.' : 'Voice commands stopped (your phone kept ending them). Use the buttons.';
+    $('vcNote').textContent = why==='denied' ? 'Voice commands are off: speech permission was denied. iPhone: Settings → Apps → Safari → allow Microphone and Speech Recognition, then reopen the app.' : 'Voice commands are off. Use the buttons.';
+    vc('🗣 voice off · '+(why==='denied'?'no permission':'unavailable'),'var(--miss)');
     if(state==='ready') readyStatus(); else if(state==='live') liveStatus();
   }
   function startCmd(){
     recWanted=true; if(cmdBlocked||rec||!cfg.voiceCmds) return;
     try{
       rec=new SR(); rec.lang='en-US'; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=3;
-      rec.onresult=e=>{ recFails=0; for(let i=e.resultIndex;i<e.results.length;i++) for(let a=0;a<e.results[i].length;a++) if(handleCmd(e.results[i][a].transcript)) return; };
+      rec.onstart=()=>{ vc('🗣 listening…','var(--hit)'); };
+      rec.onresult=e=>{ recFails=0;
+        const last=e.results[e.results.length-1]; if(last&&last[0]) vc(`🗣 “${last[0].transcript.trim().slice(-28)}”`,'var(--hit)');
+        for(let i=e.resultIndex;i<e.results.length;i++) for(let a=0;a<e.results[i].length;a++) if(handleCmd(e.results[i][a].transcript)) return; };
       rec.onerror=ev=>{
         if(ev.error==='not-allowed'||ev.error==='service-not-allowed') return blockCmds('denied');
-        if(ev.error!=='no-speech'&&ev.error!=='aborted') recFails++;
+        if(ev.error==='audio-capture') vc('🗣 mic busy, retrying','var(--amber)');
+        else if(ev.error!=='no-speech'&&ev.error!=='aborted') vc('🗣 '+ev.error+', retrying','var(--amber)');
       };
       rec.onend=()=>{
         rec=null; if(!recWanted||cmdBlocked) return;
-        const quick=performance.now()-recLastStart<2000; if(quick) recFails++;
-        if(recFails>=4) return blockCmds('flaky');
-        setTimeout(()=>{ if(recWanted&&!cmdBlocked) startCmd(); }, quick?1500*recFails:400);
+        const quick=performance.now()-recLastStart<2000; recFails = quick ? recFails+1 : 0;
+        setTimeout(()=>{ if(recWanted&&!cmdBlocked) startCmd(); }, Math.min(1500, 200+recFails*250));
       };
       recLastStart=performance.now(); rec.start();
-    }catch(e){ rec=null; recFails++; if(recFails>=3) blockCmds('flaky'); }
+    }catch(e){ rec=null; recFails++; setTimeout(()=>{ if(recWanted&&!cmdBlocked) startCmd(); }, Math.min(3000, 500*recFails)); }
   }
-  function stopCmd(){ recWanted=false; try{ rec&&rec.abort(); }catch(e){} rec=null; }
+  function stopCmd(){ recWanted=false; try{ rec&&rec.abort(); }catch(e){} rec=null; if(cfg.voiceCmds&&!cmdBlocked) vc('🗣 voice paused'); }
   let lastCmdAt=0;
   function handleCmd(raw){
     if(state==='live'){   // live stage: move the target display by voice, and read the call out
       const now=performance.now(); if(now-lastCmdAt<1500) return true;   // interim + final results fire twice
-      const t=raw.toLowerCase(), n=stage.targets.length, cur=stage.view||0, num=w=>/^\d$/.test(w)?+w:NUMW[w];
+      const t=raw.toLowerCase(), n=stage.targets.length, cur=stage.view||0, num=w=>/^\d+$/.test(w)?+w:NUMW[w];
       let to=null, again=false;
-      const m=t.match(/target\s*(\d|[a-z]+)/);
+      const m=t.match(/target\W*(\d+|[a-z]+)/);
       if(m&&num(m[1])>=1&&num(m[1])<=n) to=num(m[1])-1;
       else if(/\bnext\b/.test(t)) to=cur+1;
       else if(/\b(back|previous|last one)\b/.test(t)) to=cur-1;
@@ -839,24 +849,24 @@
       if(to===null) return false;
       lastCmdAt=now; viewTarget(to); callTarget(stage.view); liveStatus(); return true;
     }
-    if(state==='ready'){ if(/\bready\b/i.test(raw)){ stopCmd(); goReady(); return true; } return false; }
+    if(state==='ready'){ if(/\bready\b/i.test(raw)){ goReady(); return true; } return false; }
     if(state!=='await') return false;
     const nx=stage.seq[stage.k+1], t=raw.toLowerCase(); let ok=/\bnext\b/.test(t);
-    const num=w=>/^\d$/.test(w)?+w:NUMW[w];
-    const m=t.match(/target\s*(\d|[a-z]+)/); if(m&&num(m[1])===nx.ti+1) ok=true;
+    const num=w=>/^\d+$/.test(w)?+w:NUMW[w];
+    const m=t.match(/target\W*(\d+|[a-z]+)/); if(m&&num(m[1])===nx.ti+1) ok=true;
     const q=t.match(/position\s*(\d|[a-z]+)/); if(q&&num(q[1])===nx.pos+1) ok=true;
     if(ok){ stopCmd(); goNext(); return true; } return false;
   }
 
   // ---------- mic ----------
-  let analyser,buf,micOK=false,shown=0,actx=null;
+  let analyser,buf,micOK=false,shown=0,actx=null,micStream=null;
   function ensureCtx(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); actx.resume&&actx.resume(); }catch(e){} return actx; }
   function beep(freq=1400,dur=0.35,vol=0.6){ const c=ensureCtx(); if(!c) return; try{ const o=c.createOscillator(), g=c.createGain();
     o.type='square'; o.frequency.value=freq; g.gain.setValueAtTime(vol,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);
     o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+dur); }catch(e){} }
   async function startMic(){
     if(analyser) return;
-    try{ const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    try{ const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}); micStream=st;
       const ctx=ensureCtx(); await ctx.resume();
       analyser=ctx.createAnalyser(); analyser.fftSize=1024; buf=new Float32Array(1024);
       ctx.createMediaStreamSource(st).connect(analyser); micOK=true;
@@ -866,7 +876,14 @@
       $('micHome').textContent='✕ blocked'; $('micHome').style.color='var(--miss)';
       $('boom').innerHTML='<span class="bad" style="font-size:15px">Mic blocked. Check the steps below.</span>'; }
   }
+  function releaseShotMic(){   // hand the mic to voice commands (iPhone can't do both)
+    try{ micStream&&micStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    micStream=null; analyser=null; micOK=false;
+    $('micPill').textContent='🗣 voice mode'; $('micPill').style.color='var(--blue)';
+    $('micHome').textContent='not tested'; $('micHome').style.color=''; $('micTest').textContent='Test mic';
+  }
   function loop(){
+    if(!analyser) return;
     analyser.getFloatTimeDomainData(buf); let p=0; for(let i=0;i<buf.length;i++){ const v=Math.abs(buf[i]); if(v>p)p=v; }
     shown=Math.max(p,shown*.9); $('lvl').style.width=Math.min(100,shown*100)+'%'; $('hLvl').style.width=Math.min(100,shown*100)+'%';
     if(!$('home').classList.contains('hidden')&&p>=cfg.micThr&&performance.now()-lastBoom>800){ lastBoom=performance.now(); $('boom').textContent='💥 Shot detected'; setTimeout(()=>{ if(performance.now()-lastBoom>=700) $('boom').textContent=''; },800); }
@@ -973,7 +990,7 @@
     return head.concat(body,tail);
   }
   function newStage(){
-    stopCmd();
+    if(cfg.liveMic!=='voice') stopCmd();
     let n = cfg.tCount==='rand' ? rint(2,6) : parseInt(cfg.tCount);
     const P = Math.max(1,Math.min(4,+cfg.positions||1));
     const w=Math.round(rnd(Math.min(cfg.minW,cfg.maxW),Math.max(cfg.minW,cfg.maxW)));
@@ -997,7 +1014,7 @@
   }
   function readyStatus(){ setStatus('','Get your data', '<span style="color:var(--amber)">Muzzle safe direction · finger off the trigger</span><br>'+((cmdBlocked||!cfg.voiceCmds)?'Tap ▶ Play to hear it. Tap Shooter ready when set':'Tap ▶ Play to hear it. Say "ready" or tap Shooter ready')); }
   function awaitReady(){ state='ready'; readyStatus(); $('readyBtn').classList.remove('hidden'); startCmd(); }
-  function goReady(){ if(state!=='ready') return; stopCmd(); $('readyBtn').classList.add('hidden'); state='speaking'; standBy(); }
+  function goReady(){ if(state!=='ready') return; if(cfg.liveMic!=='voice') stopCmd(); $('readyBtn').classList.add('hidden'); state='speaking'; standBy(); }
   function standBy(){
     const my=stage;
     setStatus('','Stand by','Timer starts on the beep');
@@ -1032,12 +1049,12 @@
     if(stage.over||stage.shotDone) return;
     state='live'; stage.heard=0; deafUntil=performance.now()+400;
     $('nextBtn').classList.add('hidden'); $('doneBtn').classList.remove('hidden');
-    liveStatus(); renderTargets(); startCmd();
+    liveStatus(); renderTargets(); if(cfg.liveMic==='voice') startCmd();
   }
   function liveStatus(){
     const n=stage.seq.length;
-    const vc = !cmdBlocked && cfg.voiceCmds && multiT() ? ' · say "next", "back" or "target 3"' : '';
-    setStatus('', 'Stage live', `${n} round${n>1?'s':''}${stage.P>1?` · ${stage.P} positions`:''} · tap Stage complete when done${vc}${micOK?` · 🎙 ${stage.heard} heard`:''}`);
+    const vcTxt = !cmdBlocked && cfg.voiceCmds && cfg.liveMic==='voice' && multiT() ? ' · say "next", "back" or "target 3"' : '';
+    setStatus('', 'Stage live', `${n} round${n>1?'s':''}${stage.P>1?` · ${stage.P} positions`:''} · tap Stage complete when done${vcTxt}${micOK&&cfg.liveMic==='shots'?` · 🎙 ${stage.heard} heard`:''}`);
   }
   let lastHeard=0;
   function heardShot(){   // optional mic counter during a live stage
@@ -1047,7 +1064,7 @@
   function callTarget(i){   // spoken on a voice command only; never blocks shot counting
     try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(tgtSpeech(i)); u.rate=Math.max(0.9,cfg.callRate||0.8); speechSynthesis.speak(u); }catch(e){}
   }
-  function stageComplete(){ if(state!=='live') return; stopCmd(); $('doneBtn').classList.add('hidden'); beep(1000,0.15,0.4); openBatch(); }
+  function stageComplete(){ if(state!=='live') return; if(cfg.liveMic!=='voice') stopCmd(); $('doneBtn').classList.add('hidden'); beep(1000,0.15,0.4); openBatch(); }
   function onShot(){
     if(state!=='listen') return;
     deafUntil=performance.now()+1200;
@@ -1072,7 +1089,7 @@
   }
   // ---- data entry for the whole stage ----
   function openBatch(){
-    stage.shotDone=true; state='batch'; stopCmd(); hush(); paintTimer(false);
+    stage.shotDone=true; state='batch'; if(cfg.liveMic!=='voice') stopCmd(); hush(); paintTimer(false);
     ['nextBtn','readyBtn','entry'].forEach(id=>$(id).classList.add('hidden'));
     renderTargets();
     $('doneBtn').classList.add('hidden');
@@ -1241,7 +1258,7 @@
       <li>The mic only works on the <b>https link</b> in <b>Safari</b> (iPhone) or Chrome, not from a downloaded file.</li>
       <li>Tap <b class="k">Test mic</b>, allow access, clap, and drag the <b>red line</b> until "💥 Shot detected" fires on your shot but not on background noise. On a busy firing line, use 0.6–0.8.</li>
       <li>The mic is <b>optional</b>. It just counts shots during a stage.</li>
-      <li>For voice commands on iPhone, allow <b>Speech Recognition</b> when asked. If you denied it: Settings → Apps → Safari → allow Microphone &amp; Speech Recognition. You can turn voice commands off in the mic card.</li>
+      <li>For voice commands on iPhone, allow <b>Speech Recognition</b> when asked. If you denied it: Settings → Apps → Safari → allow Microphone &amp; Speech Recognition. In the mic card, pick what the mic does during a stage: <b>voice commands</b> or the <b>shot counter</b>. iPhone can't do both at once. The 🗣 pill at the top of the stage screen shows what it heard. Tap it to restart listening.</li>
       <li>Tip: Share → <b>Add to Home Screen</b> makes it open like an app.</li></ul>`],
     ['⚠️ Stay safe', `<ul><li><b>Dry fire</b>: verify the rifle is unloaded, chamber and magazine, with <b>no live ammo in the room</b>.</li>
       <li><b>Live fire</b>: range rules and Range Officer commands come first. The app's beep is <b>not</b> a range command.</li>
@@ -1277,15 +1294,17 @@
       return; }
     try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
     ensureCtx();
+    if(cfg.voiceCmds){ cmdBlocked=!SR; recFails=0; vc(SR?'🗣 starting…':'🗣 not supported here', SR?'':'var(--miss)'); startCmd(); }   // inside the tap
     $('home').classList.add('hidden'); $('session').classList.remove('hidden'); window.scrollTo(0,0);
     match = {total:cfg.matchStages,cur:0,stages:[],done:false};
     sessShots=[]; renderSessPlot();
     log=[]; streak=0; stageNo=0; $('logBody').innerHTML=''; $('logCard').classList.add('hidden');
     $('skipBtn').textContent = 'End match';
-    await startMic(); keepAwake(); stats(); newStage();
+    if(cfg.liveMic==='voice') releaseShotMic(); else await startMic();
+    keepAwake(); stats(); newStage();
   };
   $('homeBtn').onclick=()=>{
-    stopCmd(); hush(); state='idle'; if(stage) stage.over=true;
+    stopCmd(); $('vcPill').classList.add('hidden'); hush(); state='idle'; if(stage) stage.over=true;
     try{ wake&&wake.release(); }catch(e){}
     $('session').classList.add('hidden'); $('home').classList.remove('hidden'); window.scrollTo(0,0); refresh();
   };
@@ -1300,12 +1319,13 @@
       chunks.forEach((c,i)=>{ const u=new SpeechSynthesisUtterance(c); u.rate=rate; if(i===chunks.length-1) u.onend=()=>{ deafUntil=performance.now()+700; }; speechSynthesis.speak(u); });
     }catch(e){}
   };
-  $('readyBtn').onclick=()=>goReady();
+  $('readyBtn').onclick=()=>{ startCmd(); goReady(); };
   $('nextT').onclick=()=>viewTarget((stage.view||0)+1);
   $('prevT').onclick=()=>viewTarget((stage.view||0)-1);
   $('doneBtn').onclick=()=>stageComplete();
+  $('vcPill').onclick=()=>{ cmdBlocked=!SR; recFails=0; try{ rec&&rec.abort(); }catch(e){} rec=null; startCmd(); };   // tap to restart voice
   $('gradeAllBtn').onclick=()=>gradeAll();
-  $('nextStageBtn').onclick=()=>{ $('nextStageBtn').classList.add('hidden'); newStage(); };
+  $('nextStageBtn').onclick=()=>{ startCmd(); $('nextStageBtn').classList.add('hidden'); newStage(); };
   $('shotBtn').onclick=()=>{ if(!speaking) onShot(); };
   $('nextBtn').onclick=()=>goNext();
   $('skipBtn').onclick=()=>{
