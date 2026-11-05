@@ -95,6 +95,16 @@
   .chk{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;cursor:pointer;font-size:14px;line-height:1.4}
   .chk input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--amber)}
   .chk.on{border-color:var(--amber);background:rgba(242,169,59,.06)}
+  .tut .sheet{display:flex;flex-direction:column;max-height:88vh}
+  .tut .tbody{overflow:auto;flex:1;font-size:15px;line-height:1.5}
+  .tut .tbody h3{font-family:var(--cond);font-size:26px;margin:2px 0 8px;letter-spacing:.02em}
+  .tut .tbody ul{padding-left:18px;margin:6px 0} .tut .tbody li{margin:5px 0}
+  .tut .tbody .box{background:var(--panel2);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
+  .tut .tbody b.k{color:var(--amber)}
+  .tut .dots{display:flex;gap:6px;justify-content:center;margin:12px 0}
+  .tut .dots i{width:7px;height:7px;border-radius:50%;background:var(--line)} .tut .dots i.on{background:var(--amber);width:20px;border-radius:4px}
+  .tut .nav{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+  .helpbtn{margin-left:auto;align-self:center;width:auto;padding:8px 12px;font-size:14px}
   .startbar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 35%)}
   .startbar button{max-width:492px;margin:0 auto;display:block;font-family:var(--cond);font-size:24px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:16px;border-radius:16px;box-shadow:0 10px 30px -10px rgba(242,169,59,.7)}
   .startbar small{display:block;font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;opacity:.75}
@@ -176,6 +186,7 @@
       <p>Get the call. Do the math. Send it.</p>
     </div>
   </div>
+  <button class="sec" id="helpBtn" style="margin:-4px 0 12px;font-size:15px">❓ How it works: quick tutorial</button>
 
   <!-- mode -->
   <div class="card" id="matchCard">
@@ -329,6 +340,7 @@
     <button class="ghost" id="homeBtn">← Home</button>
     <div class="row" style="gap:8px">
       <span class="pill" id="micPill">mic off</span>
+      <button class="sec" id="helpBtn2" style="width:auto;padding:6px 12px;font-size:14px">?</button>
 
     </div>
   </div>
@@ -403,6 +415,15 @@
 </section>
 </main>
 
+<div class="modal tut hidden" id="tut">
+  <div class="sheet">
+    <div class="row" style="justify-content:space-between"><span class="label" id="tutStep"></span><button class="ghost" id="tutClose">✕ Close</button></div>
+    <div class="tbody" id="tutBody"></div>
+    <div class="dots" id="tutDots"></div>
+    <div class="nav"><button class="sec" id="tutPrev">◀ Back</button><button id="tutNext">Next →</button></div>
+  </div>
+</div>
+
 <div class="modal" id="safety">
   <div class="sheet">
     <h2>⚠ Safety first</h2>
@@ -424,7 +445,7 @@
   const DEFAULT_DOPE=[[100,0.0,0.1,0.11],[200,0.5,0.2,0.23],[300,1.1,0.3,0.36],[400,1.8,0.4,0.49],[500,2.4,0.5,0.63],[600,3.1,0.6,0.78],
     [700,3.9,0.7,0.94],[800,4.8,0.8,1.11],[900,5.7,1.0,1.29],[1000,6.8,1.1,1.48],[1100,8.0,1.3,1.69],[1200,9.3,1.4,1.91]]; // EXAMPLE ONLY: dist, elev mil, wind mil/10mph, TOF s
   const DEFAULTS={tCount:'1',minD:300,maxD:1000,minW:3,maxW:15,units:'yd',roundTo:'1',tolE:0.2,tolW:0.2,maxRds:5,
-    onMiss:'reengage',brief:'all',callRate:0.8,gapMin:3,gapMax:500,nextDelay:6,micThr:0.5,movers:'0',mvMin:2,mvMax:4,parTime:90,autoVoice:false,voiceCmds:true,sizeMode:'mixed',gradeBy:'size',positions:1,order:'called',safetyDay:'',match:false,matchStages:5,dope:DEFAULT_DOPE,dopeSet:false};
+    onMiss:'reengage',brief:'all',callRate:0.8,gapMin:3,gapMax:500,nextDelay:6,micThr:0.5,movers:'0',mvMin:2,mvMax:4,parTime:90,autoVoice:false,voiceCmds:true,tutSeen:false,sizeMode:'mixed',gradeBy:'size',positions:1,order:'called',safetyDay:'',match:false,matchStages:5,dope:DEFAULT_DOPE,dopeSet:false};
 
   // ---------- config ----------
   let cfg;
@@ -1169,9 +1190,82 @@
     $('safetyOk').disabled=!safetyAgreed; $('safetyOk').textContent = safetyAgreed?'Close':"I agree. Let's set up";
     $('safetyCancel').classList.add('hidden'); $('safety').classList.remove('hidden');
   }
-  $('safetyOk').onclick=()=>{ safetyAgreed=true; $('safety').classList.add('hidden'); document.body.style.overflow=''; };
+  $('safetyOk').onclick=()=>{ const first=!safetyAgreed; safetyAgreed=true; $('safety').classList.add('hidden'); document.body.style.overflow=''; if(first&&!cfg.tutSeen) openTut(); };
   $('safetyLink').onclick=()=>openSafety();
   openSafety(); document.body.style.overflow='hidden';   // shown on open; can't be skipped
+
+  // ---------- tutorial ----------
+  const TUT=[
+    ['🎯 What this is', `<p>Dope Trainer runs a <b>PRS-style match on your phone</b>. Each stage gives you targets with a distance and a wind call. You work out your own elevation and wind holds, shoot the stage, then enter what you used. It grades every shot against <b>your own dope card</b>, using a real plate size for each distance.</p>
+      <div class="box">The flow: <b>Set up → Get your data → "Ready" → Beep → Shoot the stage → Stage complete → Enter data → Graded</b></div>
+      <p>Works for <b>live fire</b> at the range or <b>dry fire</b> at home.</p>`],
+    ['📋 1. Load your dope', `<p>The app grades you against <b>your</b> rifle's numbers, so do this first. In <b>Your dope</b> on the home screen:</p>
+      <ul><li><b class="k">📷 Screenshot</b>: pick a screenshot of your ballistic app's dope table. It reads the numbers. Tell it which column is which, fix any misreads, then tap <b>Save dope</b>.</li>
+      <li><b class="k">✏️ Edit</b>: type or fix rows by hand.</li></ul>
+      <div class="box">Columns, all in <b>mils</b>: <b>Distance · Elevation · Wind for a 10 mph full-value wind · Time of flight</b> (optional, used for mover lead). Rows every 100 yd are enough, and it fills in between.</div>
+      <p>Your dope is saved <b>on your phone only</b>. Each friend enters their own.</p>`],
+    ['⚙️ 2. Set up the match', `<ul>
+      <li><b class="k">Match stages</b>: 1 (quick drill) up to 10.</li>
+      <li><b class="k">Targets</b>: 1–6 per stage, or 🎲 random.</li>
+      <li><b class="k">Positions</b>: shoot every target from each position. For example, 2 targets × 3 positions = 6 shots (tripod, barricade, and so on).</li>
+      <li><b class="k">Order</b>: as called, or a ladder (near→far or far→near).</li>
+      <li><b class="k">Movers</b>: how many targets are moving, and their speed range.</li>
+      <li><b class="k">Target size</b>: Easy 3 MOA · Medium 2 · Hard 1.5 · Mixed. Each target gets a real plate size (4–30″).</li>
+      <li><b class="k">Distance / Wind</b>: drag the sliders or tap a preset. Max 1200.</li>
+      <li><b class="k">Stage timer</b>: par time for each stage.</li></ul>
+      <p>Then tap <b>Start match</b>.</p>`],
+    ['🌬 3. Get your data', `<p>Before the beep, the clock isn't running. Take your time and write it down.</p>
+      <ul><li><b class="k">▶ Play stage</b> reads every target's distance and wind speed. It's the only way the app talks.</li>
+      <li><b class="k">Next target →</b>, or tap a target tile, to see each one. Every target has its own <b>wind clock</b>. The arrow shows where the wind is coming <b>from</b>, with you at the center facing 12.</li>
+      <li>Movers show their speed and direction (← or →).</li></ul>
+      <div class="box"><b>Clock values</b>: 3 &amp; 9 = full · 2, 4, 8, 10 = 0.87 · 1, 5, 7, 11 = ½ · 12 &amp; 6 = none<br>
+      <b>Wind hold</b> = your 10 mph wind × (mph ÷ 10) × clock value. Hold <b>into</b> the wind: wind from the right (1–5 o'clock) means hold <b>R</b>.<br>
+      <b>Movers</b>: add lead in the direction it's moving (moving right means hold more R).</div>`],
+    ['🔔 4. Shoot the stage', `<ul>
+      <li>Say <b class="k">"ready"</b> or tap <b>Shooter ready</b>. You'll hear "Stand by", then a <b>beep</b> 1–3 s later. The clock starts.</li>
+      <li>Shoot every target, from every position, in order. <b>No tapping during the stage.</b></li>
+      <li>Voice commands while live: <b class="k">"next"</b>, <b class="k">"back"</b>, <b class="k">"target 3"</b>, <b class="k">"repeat"</b>. They change the target on screen and read its call.</li>
+      <li>Done? Tap <b class="k">✓ Stage complete</b>. If the timer runs out, it calls <b>TIME</b> and stops for you.</li></ul>
+      <div class="box">The clock warns you at 30 s and 10 s. Entering data is <b>never</b> on the clock.</div>`],
+    ['✍️ 5. Enter data & get graded', `<p>One row per shot (P2 T1 = position 2, target 1):</p>
+      <ul><li><b class="k">Elev</b>: what you dialed. <b class="k">Wind</b>: what you held (on movers, wind <b>plus</b> lead). Tap <b>R/L</b> to set the side.</li>
+      <li><b class="k">✕</b> = a shot you didn't take. It counts as a miss.</li>
+      <li>Leave rows <b>blank</b> to skip them. Fill in as many as you want. Skipped rows aren't scored, but you still see the correct dope.</li></ul>
+      <p>Tap <b>Grade stage</b>. A shot is a <b>hit if it lands anywhere on the plate</b>, so you'll see where on the plate each shot hit, like <i>"HIT · edge · 0.2 L"</i> or <i>"MISS · 0.6 R, 0.3 low"</i>, along with the correct dope.</p>`],
+    ['📍 6. Scorecard & your tendencies', `<ul>
+      <li>After the last stage you get a <b>scorecard</b>: score per stage, total, times, and average elevation and wind error.</li>
+      <li>The <b>impact plot</b> shows where every shot landed. The ring is the plate edge, and ✚ is your average impact.</li>
+      <li>It flags patterns, like <i>"holding too little wind"</i>, <i>"shots average 0.3 low"</i> or <i>"under-leading movers"</i>. A steady offset across many shots usually means your reads or your dope need adjusting.</li>
+      <li><b>Your impact history</b> on the home screen keeps your last 200 shots between sessions.</li></ul>`],
+    ['🎙 7. Mic & voice setup', `<ul>
+      <li>The mic only works on the <b>https link</b> in <b>Safari</b> (iPhone) or Chrome, not from a downloaded file.</li>
+      <li>Tap <b class="k">Test mic</b>, allow access, clap, and drag the <b>red line</b> until "💥 Shot detected" fires on your shot but not on background noise. On a busy firing line, use 0.6–0.8.</li>
+      <li>The mic is <b>optional</b>. It just counts shots during a stage.</li>
+      <li>For voice commands on iPhone, allow <b>Speech Recognition</b> when asked. If you denied it: Settings → Apps → Safari → allow Microphone &amp; Speech Recognition. You can turn voice commands off in the mic card.</li>
+      <li>Tip: Share → <b>Add to Home Screen</b> makes it open like an app.</li></ul>`],
+    ['⚠️ Stay safe', `<ul><li><b>Dry fire</b>: verify the rifle is unloaded, chamber and magazine, with <b>no live ammo in the room</b>.</li>
+      <li><b>Live fire</b>: range rules and Range Officer commands come first. The app's beep is <b>not</b> a range command.</li>
+      <li>Muzzle in a safe direction, finger off the trigger until you're ready to fire, eye and ear protection on, and the phone never in front of the muzzle.</li></ul>
+      <p>This is a training aid. You're responsible for safe gun handling. Now go get some hits. 🎯</p>`],
+  ];
+  let tutI=0;
+  function tutShow(i){
+    tutI=Math.max(0,Math.min(TUT.length-1,i));
+    $('tutStep').textContent=`${tutI+1} / ${TUT.length}`;
+    $('tutBody').innerHTML=`<h3>${TUT[tutI][0]}</h3>${TUT[tutI][1]}`; $('tutBody').scrollTop=0;
+    $('tutDots').innerHTML=TUT.map((_,k)=>`<i class="${k===tutI?'on':''}"></i>`).join('');
+    $('tutPrev').style.visibility=tutI?'visible':'hidden';
+    $('tutNext').textContent = tutI===TUT.length-1 ? "Got it. Let's train" : 'Next →';
+  }
+  function openTut(){ tutShow(0); $('tut').classList.remove('hidden'); }
+  function closeTut(){ $('tut').classList.add('hidden'); if(!cfg.tutSeen){ cfg.tutSeen=true; save(); } }
+  $('tutNext').onclick=()=> tutI===TUT.length-1 ? closeTut() : tutShow(tutI+1);
+  $('tutPrev').onclick=()=>tutShow(tutI-1);
+  $('tutClose').onclick=closeTut;
+  $('helpBtn').onclick=openTut; $('helpBtn2').onclick=openTut;
+  // swipe between steps
+  let tx=null; $('tutBody').addEventListener('touchstart',e=>{ tx=e.touches[0].clientX; },{passive:true});
+  $('tutBody').addEventListener('touchend',e=>{ if(tx==null) return; const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>60) tutShow(tutI+(dx<0?1:-1)); tx=null; },{passive:true});
 
   // ---------- navigation ----------
   let warned=false;
